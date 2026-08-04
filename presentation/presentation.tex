@@ -16,9 +16,9 @@
 \subtitle{Bridging the Gap Between Post-Hoc Explainability and Prospective Clinical Utility}
 
 \author[Sheela Akshar Sakhi]{
-  \textbf{Sheela Akshar Sakhi}\ inst{1} \ (Roll No: \texttt{cb.sc.u4cse23547}) \\
+  \textbf{Sheela Akshar Sakhi}\inst{1} \ (Roll No: \texttt{cb.sc.u4cse23547}) \\
   \vspace{0.15cm}
-  \small \textit{Guided by:} \textbf{Dr. G. R. Ramya}\ inst{2}
+  \small \textit{Supervisor:} \textbf{Dr. G. R. Ramya}\inst{2}
 }
 
 \institute[Amrita School of Computing]{
@@ -67,7 +67,39 @@
   \end{columns}
 \end{frame}
 
-% Slide 4: System Architecture Block Diagram
+% Slide 4: Key Novelty & Research Contributions
+\begin{frame}{Key Novelty \& Technical Contributions}
+  \begin{columns}
+    \column{0.5\textwidth}
+    \begin{block}{\textbf{Pillar 1: Formal Stability Bound ($\mathcal{S}_{\text{Lip}}$)}}
+      \small
+      First benchmark to formalize XAI robustness under bedside sensor noise as a \textbf{Local Lipschitz Continuity Ratio}.
+    \end{block}
+
+    \begin{block}{\textbf{Pillar 2: Explainer Discordance ($\mathcal{D}_{\text{XAI}}$)}}
+      \small
+      Quantifies attribution rank inversion ($\rho < 0.62$) across SHAP, LIME, and PFI on identical patient charts.
+    \end{block}
+
+    \column{0.5\textwidth}
+    \begin{block}{\textbf{Pillar 3: Medical Prior Alignment ($\mathcal{W}_{\text{Clinical}}$)}}
+      \small
+      Formulates \textbf{Earth Mover's Distance} to evaluate divergence from established medical knowledge graphs.
+    \end{block}
+
+    \begin{block}{\textbf{Pillar 4: Human-AI Calibrated Utility ($\mathcal{U}_{\text{Clinical}}$)}}
+      \small
+      Constructs a decision simulation model penalizing \textbf{Over-Reliance} and \textbf{Under-Reliance} clinical errors.
+    \end{block}
+  \end{columns}
+  \vspace{0.2cm}
+  \begin{exampleblock}{Summary of Technical Shift}
+    \centering
+    \small \textbf{Retrospective Visual Inspection} $\longrightarrow$ \textbf{Mathematically Rigorous Clinical Utility Auditing}
+  \end{exampleblock}
+\end{frame}
+
+% Slide 5: System Architecture Block Diagram
 \begin{frame}{System Block Diagram: C-XAI Benchmark Pipeline}
   \centering
   \includegraphics[height=0.75\textheight,width=\textwidth,keepaspectratio]{figures/fig0_architecture.png}
