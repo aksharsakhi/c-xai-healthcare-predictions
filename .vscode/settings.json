@@ -1,0 +1,19 @@
+{
+  "files.exclude": {
+    "**/.git": true,
+    "**/.DS_Store": true,
+    "**/__pycache__": true,
+    "**/*.pyc": true,
+    "**/*.aux": true,
+    "**/*.bbl": true,
+    "**/*.blg": true,
+    "**/*.log": true,
+    "**/*.out": true,
+    "**/*.toc": true,
+    "**/*.nav": true,
+    "**/*.snm": true,
+    "**/*.synctex.gz": true,
+    "**/*.fls": true,
+    "**/*.fdb_latexmk": true
+  }
+}
