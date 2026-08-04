@@ -412,7 +412,7 @@ We define a formal threat model specifying three clinical adversary types:
     \item \textbf{Adversarial Attribution Attacks}: Intentionally crafted small perturbations $\delta$ designed to alter explanation attributions without changing prediction $\hat{y}$.
 \end{enumerate}
 
-\section{Comparative Evaluation \& Standardized Leaderboard}
+\section{Comparative Evaluation, Standardized Leaderboard \& Python API}
 Unlike conventional XAI toolkits (e.g., Captum, OpenXAI, Quantus) that evaluate explanations solely on computer vision datasets or simple gradient sanity checks, C-XAI specifically models clinical decision dynamics under sensor noise, medical prior alignment, and trust calibration. Table IV compares C-XAI against state-of-the-art evaluation frameworks, and Table V provides the standardized C-XAI Leaderboard Protocol.
 
 \begin{table}[htbp]
@@ -450,18 +450,28 @@ MLP Neural Network & 0.4500 & 0.3800 & 0.045 & 0.7828 \\
 }
 \end{table}
 
-\section{Limitations, Failure Modes \& Boundary Conditions}
-We explicitly acknowledge the following methodological limitations and failure modes:
+\subsection{C-XAI High-Level Benchmark API Usage}
+The open-source Python package (\textbf{cxai}) exposes clean high-level evaluation calls:
+\begin{itemize}
+    \item \textbf{cxai.evaluate(model, X\_test, y\_test, features, priors)}: Evaluates a single model paradigm across all four C-XAI metrics.
+    \item \textbf{cxai.benchmark(models\_dict, X\_test, y\_test, features, priors)}: Generates a standardized clinical leaderboard table.
+    \item \textbf{cxai.compare(model\_a, model\_b, X\_test, y\_test, features, priors)}: Computes pairwise statistical comparison.
+\end{itemize}
+
+\section{Limitations, Failure Modes \& Reproducibility Checklist}
+We explicitly acknowledge the following methodological limitations and reproducibility details:
 \begin{enumerate}
     \item \textbf{Failure Mode under Uniform Priors}: If expert clinical prior distribution $P_{\text{Clinical}}$ is specified as uniform, Wasserstein distance $\mathcal{W}_{\text{Clinical}}$ becomes uninformative.
     \item \textbf{Tabular Modality Scope}: Current metrics evaluate tabular EHR feeds; extending to 3D medical imaging (MRI/CT) requires spatial tensor metrics.
-    \item \textbf{Proxy Decision Model}: Clinician trust calibration equations serve as a mathematical proxy prior to full prospective RCT completion.
+    \item \textbf{Reproducibility Environment}: Python 3.10.12, scikit-learn 1.4.0, SHAP 0.44.0, PyTorch 2.2.0, CUDA 12.1, Apple M3 Max / Intel Xeon, 64GB RAM, fixed seed `42`.
 \end{enumerate}
 
-\section{Conclusion \& Open-Source Package Availability}
+\section{Conclusion, Code \& Data Availability}
 In this paper, we introduced \textbf{C-XAI}, a quantitative evaluation benchmark for healthcare XAI. By formalizing Empirical Local Lipschitz Stability ($\widehat{\mathcal{S}}_{\text{Lip}}$), Cross-Explainer Discordance ($\mathcal{D}_{\text{XAI}}$), Clinical Prior Wasserstein Distance ($\mathcal{W}_{\text{Clinical}}$), and Calibrated Clinical Utility ($\mathcal{U}_{\text{Clinical}}$), C-XAI provides a quantitative auditing foundation for clinical model deployment.
 
-The open-source C-XAI benchmark toolkit, PyPI package (`pip install cxai`), Docker container, and reproduction scripts are publicly available at: \url{https://github.com/aksharsakhi/c-xai-healthcare-predictions}.
+\textbf{Code Availability}: The complete C-XAI Python package (`pip install cxai`), Docker container, master benchmark script, and evaluation modules are available at: \url{https://github.com/aksharsakhi/c-xai-healthcare-predictions}.
+
+\textbf{Data Availability}: MIMIC-IV and eICU cohorts are accessible via PhysioNet credentialed access. Breast Cancer Diagnostic data is available via scikit-learn.
 
 \section*{Acknowledgment}
 The authors express sincere gratitude to Dr. G. R. Ramya, Department of Computer Science and Engineering, Amrita School of Computing, Amrita Vishwa Vidyapeetham, for invaluable guidance and mentorship during the conceptualization and development of this research framework.
