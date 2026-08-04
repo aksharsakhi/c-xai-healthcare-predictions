@@ -2,6 +2,7 @@
 
 [![IEEE Format](https://img.shields.io/badge/Paper-IEEE%20Format%20(8%20Pages)-blue.svg)](paper/main.pdf)
 [![Beamer Deck](https://img.shields.io/badge/Presentation-Beamer%20LaTeX%20(10%20Slides)-orange.svg)](presentation/presentation.pdf)
+[![Conference Target](https://img.shields.io/badge/Target-ICMLDE%202026%20(Elsevier)-purple.svg)](CONFERENCE_DETAILS.md)
 [![PyPI Package](https://img.shields.io/badge/Python%20Package-cxai--1.0.0-brightgreen.svg)](setup.py)
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](Dockerfile)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
