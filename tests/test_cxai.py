@@ -45,6 +45,13 @@ class TestCXAIBenchmark(unittest.TestCase):
         ece = cxai.compute_expected_calibration_error(y_true, y_prob)
         self.assertTrue(0.0 <= ece <= 1.0)
 
+    def test_brier_score(self):
+        y_true = np.array([1, 0, 1, 0])
+        y_prob = np.array([0.9, 0.1, 0.8, 0.2])
+        bs = cxai.metrics.compute_brier_score(y_true, y_prob)
+        self.assertGreaterEqual(bs, 0.0)
+        self.assertLessEqual(bs, 1.0)
+
     def test_calibrated_utility(self):
         util = cxai.compute_calibrated_clinical_utility(acc=0.95, s_lip=0.05, a_clinical=0.90, ece=0.02)
         self.assertIn('Net_Clinical_Utility', util)

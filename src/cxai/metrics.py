@@ -97,6 +97,14 @@ def compute_expected_calibration_error(y_true, y_prob, n_bins=10):
             ece += np.abs(accuracy_in_bin - avg_confidence_in_bin) * prop_in_bin
     return float(ece)
 
+def compute_brier_score(y_true, y_prob):
+    """
+    Computes Brier Score: BS = (1/N) * sum_{i=1}^N (y_prob_i - y_true_i)^2
+    """
+    y_true = np.asarray(y_true)
+    y_prob = np.asarray(y_prob)
+    return float(np.mean((y_prob - y_true) ** 2))
+
 def compute_calibrated_clinical_utility(acc, s_lip, a_clinical, ece, alpha=0.50, beta=0.30):
     """
     Computes Net Calibrated Clinical Decision Utility (U_Clinical):
