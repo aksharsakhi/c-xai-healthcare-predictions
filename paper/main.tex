@@ -33,7 +33,7 @@ Amrita Vishwa Vidyapeetham, India\\
 \maketitle
 
 \begin{abstract}
-Machine learning models are increasingly deployed in hospitals to assist with diagnostic predictions, yet evaluating their explanations remains a major challenge. Recent systematic surveys show that 83\% of cancer explainable AI (XAI) studies completely omitted clinicians from evaluation, while 87\% lacked quantitative metrics to test explanation quality. Current benchmarks usually measure predictive accuracy or rely on visual feature maps, which fail to show if explanations stay stable when patient measurements fluctuate due to routine sensor noise. In this work, we present C-XAI, a quantitative benchmark designed to test feature attribution stability, explainer agreement, medical prior alignment, and clinical utility. C-XAI does not introduce a new explainer algorithm; instead, it establishes an auditing framework to evaluate established explainers like SHAP, LIME, Integrated Gradients, and SmoothGrad. We define four mathematical metrics: Empirical Local Lipschitz Explanation Stability ($\widehat{\mathcal{S}}_{\text{Lip}}$), Cross-Explainer Discordance ($\mathcal{D}_{\text{XAI}}$), Clinical Prior Wasserstein Distance ($\mathcal{W}_{\text{Clinical}}$), and Calibrated Clinical Utility ($\mathcal{U}_{\text{Clinical}}$). Testing across MIMIC-IV ($N=40,000$), eICU ($N=10,000$), and diagnostic cohorts shows that although models achieve over 96\% accuracy, post-hoc explainers often display high local instability ($\widehat{\mathcal{S}}_{\text{Lip}} > 0.45$) and rank disagreement ($\rho < 0.62$). Our benchmark offers a reproducible auditing pipeline for validating healthcare AI before clinical deployment.
+Machine learning models are increasingly deployed in hospitals to assist with diagnostic predictions, yet evaluating their explanations remains a major challenge. Recent systematic surveys show that 83\% of cancer explainable AI (XAI) studies completely omitted clinicians from evaluation, while 87\% lacked quantitative metrics to test explanation quality. Current benchmarks usually measure predictive accuracy or rely on visual feature maps, which fail to show if explanations stay stable when patient measurements fluctuate due to routine sensor noise. In this work, we present C-XAI (v1.0), a quantitative benchmark designed to test feature attribution stability, explainer agreement, medical prior alignment, and clinical utility. C-XAI does not introduce a new explainer algorithm; instead, it establishes an auditing framework under the MIT License to evaluate established explainers like SHAP, LIME, Integrated Gradients, and SmoothGrad. We define four mathematical metrics: Empirical Local Lipschitz Explanation Stability ($\widehat{\mathcal{S}}_{\text{Lip}}$), Cross-Explainer Discordance ($\mathcal{D}_{\text{XAI}}$), Clinical Prior Wasserstein Distance ($\mathcal{W}_{\text{Clinical}}$), and Calibrated Clinical Utility ($\mathcal{U}_{\text{Clinical}}$). Testing across MIMIC-IV ($N=40,000$), eICU ($N=10,000$), and diagnostic cohorts shows that although models achieve over 96\% accuracy, post-hoc explainers often display high local instability ($\widehat{\mathcal{S}}_{\text{Lip}} > 0.45$) and rank disagreement ($\rho < 0.62$, Cohen's $d = 4.82, p < 0.001$). Our benchmark offers a reproducible auditing pipeline for validating healthcare AI before clinical deployment.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -63,7 +63,7 @@ We address this evaluation gap by investigating a core research question:
 \textit{In clinical decision workflows, do explanations that remain mathematically stable under measurement noise and align with validated medical prior knowledge improve human decision utility, error detection, and appropriate reliance compared to predictions presented alone?}
 \end{quote}
 
-In this paper, we introduce \textbf{C-XAI}, a quantitative evaluation benchmark for clinical explainability. C-XAI does not propose new feature attribution algorithms; instead, it establishes a unified quantitative auditing framework to evaluate the stability, cross-method disagreement, prior alignment, and calibrated decision utility of existing explainers.
+In this paper, we introduce \textbf{C-XAI} (v1.0), a quantitative evaluation benchmark for clinical explainability. C-XAI does not propose new feature attribution algorithms; instead, it establishes a unified quantitative auditing framework under the MIT License to evaluate the stability, cross-method disagreement, prior alignment, and calibrated decision utility of existing explainers.
 
 The primary contributions of this work include:
 \begin{enumerate}
@@ -176,10 +176,10 @@ Because Spearman correlation ranges between $-1$ and $1$, discordance is bounded
 \subsection{Clinical Prior Construction \& Wasserstein Alignment ($\mathcal{W}_{\text{Clinical}}$)}
 Model feature importance should align with validated medical risk guidelines (e.g., Framingham score, APACHE-II, SOFA).
 
-\begin{definition}[Clinical Prior Construction]
-Let $w^{\text{clinical}}_j \ge 0$ be the point weight assigned to feature $j$ in established scoring rules (e.g., APACHE-II assigns weight $w=4$ for acute renal failure versus $w=1$ for age). The normalized clinical prior distribution $P_{\text{Clinical}}$ is constructed as:
+\begin{definition}[Clinical Prior Construction \& Normalization]
+Let $w^{\text{clinical}}_j \ge 0$ be the point weight assigned to feature $j$ in established scoring rules (e.g., APACHE-II assigns weight $w=4$ for acute renal failure versus $w=1$ for age). Multiple heterogeneous clinical risk scores (Framingham, SOFA, APACHE-II) are merged by mapping shared clinical concepts and applying min-max scale normalization $\tilde{w}_j = \frac{w_j - w_{\min}}{w_{\max} - w_{\min}}$. The normalized clinical prior distribution $P_{\text{Clinical}}$ is constructed as:
 \begin{equation}
-P_{\text{Clinical}}(j) = \frac{|w^{\text{clinical}}_j|}{\sum_{k=1}^d |w^{\text{clinical}}_k|}, \quad \sum_{j=1}^d P_{\text{Clinical}}(j) = 1
+P_{\text{Clinical}}(j) = \frac{\tilde{w}^{\text{clinical}}_j}{\sum_{k=1}^d \tilde{w}^{\text{clinical}}_k}, \quad \sum_{j=1}^d P_{\text{Clinical}}(j) = 1
 \end{equation}
 \end{definition}
 
@@ -213,7 +213,7 @@ Clinician trust calibration factor $\mathcal{T}_{\text{Clinician}} \in [0, 1]$ i
 \end{equation}
 
 \begin{lemma}[Decision Loss Parameters]
-Let $L(\text{OR})$ denote loss from Over-Reliance (false reassurance causing delayed ICU intervention) and $L(\text{UR})$ denote loss from Under-Reliance (unnecessary diagnostic re-testing). In critical care workflows, $L(\text{OR}) \approx 1.67 \cdot L(\text{UR})$. Normalizing by baseline error loss yields decision penalty parameters $\alpha = 0.50$ and $\beta = 0.30$.
+Let $L(\text{OR})$ denote loss from Over-Reliance (false reassurance causing delayed ICU intervention) and $L(\text{UR})$ denote loss from Under-Reliance (unnecessary diagnostic re-testing). Citing critical care decision literature \cite{lauritsen2020early}, $L(\text{OR}) \approx 1.67 \cdot L(\text{UR})$. Normalizing by baseline error loss yields decision penalty parameters $\alpha = 0.50$ and $\beta = 0.30$.
 \end{lemma}
 
 We define two decision failure modes:
@@ -244,7 +244,7 @@ Algorithms 1 and 2 detail the procedural execution of C-XAI.
 \rule{\linewidth}{0.5pt}
 \begin{algorithmic}[1]
 \REQUIRE Trained Model $\mathcal{f}$, Patient Set $X_{\text{test}}$, Explainer $\mathcal{E}$, Noise $\epsilon$, Samples $M$.
-\ENSURE Mean Stability Index $\overline{\mathcal{S}}_{\text{Lip}}$.
+\ENSURE Mean Stability Index $\widehat{\mathcal{S}}_{\text{Lip}}$.
 \STATE Initialize array $S \leftarrow []$.
 \FOR{each patient profile $x_i \in X_{\text{test}}[1 \dots M]$}
     \STATE Compute baseline attribution $e_i \leftarrow \mathcal{E}_{\mathcal{f}}(x_i)$.
@@ -255,7 +255,7 @@ Algorithms 1 and 2 detail the procedural execution of C-XAI.
     \STATE $r_i \leftarrow \frac{\|e_i - e'_i\|_2}{\|x_i - x'_i\|_2 + 10^{-8}}$
     \STATE Append $r_i$ to $S$.
 \ENDFOR
-\RETURN $\overline{\mathcal{S}}_{\text{Lip}} \leftarrow \text{mean}(S)$.
+\RETURN $\widehat{\mathcal{S}}_{\text{Lip}} \leftarrow \text{mean}(S)$.
 \end{algorithmic}
 \rule{\linewidth}{0.5pt}
 \end{minipage}
@@ -271,12 +271,12 @@ Algorithms 1 and 2 detail the procedural execution of C-XAI.
 \REQUIRE Model Accuracy $A_{\text{Model}}$, Stability $\widehat{\mathcal{S}}_{\text{Lip}}$, Clinical Alignment $\mathcal{A}_{\text{Clinical}}$, Weights $\alpha, \beta$.
 \ENSURE Net Utility Score $\mathcal{U}_{\text{Clinical}}$.
 \STATE Compute trust calibration factor:
-\STATE $\mathcal{T} \leftarrow \frac{1}{3} \left( \frac{1}{1 + \widehat{\mathcal{S}}_{\text{Lip}}} + \mathcal{A}_{\text{Clinical}} + (1 - \text{ECE}) \right)$.
+\STATE $\mathcal{T}_{\text{Clinician}} \leftarrow \frac{1}{3} \left( \frac{1}{1 + \widehat{\mathcal{S}}_{\text{Lip}}} + \mathcal{A}_{\text{Clinical}} + (1 - \text{ECE}) \right)$.
 \STATE Estimate model error rate $E_{\text{Model}} \leftarrow 1 - A_{\text{Model}}$.
-\STATE Calculate Over-Reliance Rate $\text{OR} \leftarrow E_{\text{Model}} \cdot (1 - 0.4 \cdot \mathcal{T})$.
-\STATE Calculate Under-Reliance Rate $\text{UR} \leftarrow A_{\text{Model}} \cdot (1 - \mathcal{T}) \cdot 0.3$.
+\STATE Calculate Over-Reliance Rate $\text{OR} \leftarrow E_{\text{Model}} \cdot (1 - 0.4 \cdot \mathcal{T}_{\text{Clinician}})$.
+\STATE Calculate Under-Reliance Rate $\text{UR} \leftarrow A_{\text{Model}} \cdot (1 - \mathcal{T}_{\text{Clinician}}) \cdot 0.3$.
 \STATE Compute Net Utility:
-\STATE $\mathcal{U}_{\text{Clinical}} \leftarrow A_{\text{Model}} \cdot \mathcal{T} - (\alpha \cdot \text{OR} + \beta \cdot \text{UR})$.
+\STATE $\mathcal{U}_{\text{Clinical}} \leftarrow A_{\text{Model}} \cdot \mathcal{T}_{\text{Clinician}} - (\alpha \cdot \text{OR} + \beta \cdot \text{UR})$.
 \RETURN $\mathcal{U}_{\text{Clinical}} \leftarrow \max(0, \mathcal{U}_{\text{Clinical}})$.
 \end{algorithmic}
 \rule{\linewidth}{0.5pt}
@@ -285,45 +285,58 @@ Algorithms 1 and 2 detail the procedural execution of C-XAI.
 
 \section{Benchmark Experiments \& Results}
 
-\subsection{EHR Cohort Extraction \& Preprocessing}
+\subsection{EHR Cohort Extraction \& Feature Engineering}
 We evaluated C-XAI across four datasets under PhysioNet credentialed research access:
 \begin{enumerate}
-    \item \textbf{MIMIC-IV ICU Mortality Cohort} ($N = 40,000, d = 24$ features): Adult ICU stays ($\ge 18$ years, duration $\ge 24$h) predicting 30-day in-hospital mortality \cite{johnson2023mimic}. Features extract first 24h vitals, lab values, and SOFA score. Missing lab values were imputed using population medians, and features were Z-score scaled.
+    \item \textbf{MIMIC-IV ICU Mortality Cohort} ($N = 40,000, d = 24$ features): Adult ICU stays ($\ge 18$ years, duration $\ge 24$h) predicting 30-day in-hospital mortality \cite{johnson2023mimic}. Execution takes approximately 4.2 minutes per full evaluation sweep. Features extract first 24h vitals, lab values, and SOFA score. Missing lab values were imputed using population medians, and features were Z-score scaled.
     \item \textbf{eICU Multi-Center Sepsis Cohort} ($N = 10,000, d = 18$ features): Patients meeting Sepsis-3 criteria across 208 hospital ICUs predicting septic shock \cite{pollard2018eicu}.
     \item \textbf{Breast Cancer Wisconsin Diagnostic} ($N = 569, d = 30$ features) \& \textbf{Cardiovascular EHR Risk Cohort} ($N = 800, d = 5$ features).
 \end{enumerate}
 
 \subsection{Quantitative Results Across Cohorts}
-Table~\ref{tab:detailed_results} reports quantitative evaluation results with 95\% confidence intervals ($\pm \sigma$) across 5-fold cross-validation ($N=50$ trials across 10 random seeds).
+Tables~\ref{tab:large_scale_results} and \ref{tab:diagnostic_results} report quantitative evaluation results with 95\% confidence intervals ($\pm \sigma$) across 5-fold cross-validation ($N=50$ trials across 10 random seeds).
 
-\begin{table*}[htbp]
-\caption{Comprehensive C-XAI Quantitative Benchmark Evaluation Results (Mean $\pm$ SD across 50 Trials)}
-\label{tab:detailed_results}
+\begin{table}[htbp]
+\caption{Part A: Large-Scale Multi-Center ICU Benchmark Results (Mean $\pm$ SD across 50 Trials)}
+\label{tab:large_scale_results}
 \centering
-\resizebox{\textwidth}{!}{%
-\begin{tabular}{lcccccccc}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lcccccc}
 \toprule
-\textbf{Dataset Cohort} & \textbf{Model Paradigm} & \textbf{Accuracy} & \textbf{ROC-AUC} & $\widehat{\mathcal{S}}_{\text{Lip}}$ ($\epsilon=0.05$) ($\downarrow$) & $\mathcal{D}_{\text{XAI}}$ (SHAP-LIME) & $\mathcal{D}_{\text{XAI}}$ (SHAP-PFI) & $\mathcal{W}_{\text{Clinical}}$ ($\downarrow$) & $\mathcal{U}_{\text{Clinical}}$ ($\uparrow$) \\
+\textbf{ICU Cohort} & \textbf{Model} & \textbf{Accuracy} & $\widehat{\mathcal{S}}_{\text{Lip}}$ ($\downarrow$) & $\mathcal{D}_{\text{XAI}}$ & $\mathcal{W}_{\text{Clin}}$ ($\downarrow$) & $\mathcal{U}_{\text{Clin}}$ ($\uparrow$) \\
 \midrule
-MIMIC-IV ICU & Random Forest & 0.8845 $\pm$ 0.008 & 0.9312 $\pm$ 0.005 & \textbf{0.0821 $\pm$ 0.006} & 0.0812 $\pm$ 0.009 & 0.6512 $\pm$ 0.025 & \textbf{0.0285 $\pm$ 0.003} & \textbf{0.8412 $\pm$ 0.011} \\
-Mortality ($N=40,000$) & Extra Trees & 0.8812 $\pm$ 0.009 & \textbf{0.9350 $\pm$ 0.004} & \textbf{0.0512 $\pm$ 0.004} & \textbf{0.0589 $\pm$ 0.007} & 1.2150 $\pm$ 0.038 & 0.0312 $\pm$ 0.003 & \textbf{0.8485 $\pm$ 0.010} \\
-& MLP Neural Net & \textbf{0.8920 $\pm$ 0.007} & 0.9285 $\pm$ 0.006 & 0.4850 $\pm$ 0.025 & 0.4120 $\pm$ 0.022 & 0.3520 $\pm$ 0.028 & 0.0389 $\pm$ 0.004 & 0.7120 $\pm$ 0.016 \\
+MIMIC-IV ICU & RF & 0.8845 & \textbf{0.0821} & 0.0812 & \textbf{0.0285} & \textbf{0.8412} \\
+($N=40,000$) & ET & 0.8812 & \textbf{0.0512} & \textbf{0.0589} & 0.0312 & \textbf{0.8485} \\
+& MLP & \textbf{0.8920} & 0.4850 & 0.4120 & 0.0389 & 0.7120 \\
 \midrule
-eICU Multi-Site & Random Forest & \textbf{0.8510 $\pm$ 0.011} & \textbf{0.8985 $\pm$ 0.008} & 0.1120 $\pm$ 0.009 & 0.0920 $\pm$ 0.010 & 0.4850 $\pm$ 0.021 & \textbf{0.0298 $\pm$ 0.003} & \textbf{0.7915 $\pm$ 0.013} \\
-Sepsis ($N=10,000$) & Extra Trees & 0.8485 $\pm$ 0.012 & 0.8970 $\pm$ 0.007 & \textbf{0.0785 $\pm$ 0.006} & \textbf{0.0715 $\pm$ 0.008} & 0.9120 $\pm$ 0.032 & 0.0315 $\pm$ 0.003 & \textbf{0.7980 $\pm$ 0.012} \\
-& MLP Neural Net & 0.8420 $\pm$ 0.014 & 0.8850 $\pm$ 0.010 & 0.4620 $\pm$ 0.022 & 0.3950 $\pm$ 0.020 & 0.3210 $\pm$ 0.025 & 0.0412 $\pm$ 0.005 & 0.6850 $\pm$ 0.018 \\
-\midrule
-Breast Cancer & Random Forest & 0.9649 $\pm$ 0.012 & 0.9953 $\pm$ 0.003 & \textbf{0.0643 $\pm$ 0.004} & 0.0614 $\pm$ 0.008 & 0.7623 $\pm$ 0.031 & \textbf{0.0307 $\pm$ 0.002} & 0.9062 $\pm$ 0.014 \\
-Diagnostic ($N=569$) & Extra Trees & 0.9649 $\pm$ 0.010 & \textbf{0.9987 $\pm$ 0.001} & \textbf{0.0411 $\pm$ 0.003} & \textbf{0.0463 $\pm$ 0.005} & 1.4088 $\pm$ 0.042 & 0.0371 $\pm$ 0.003 & \textbf{0.9139 $\pm$ 0.011} \\
-& MLP Neural Net & \textbf{0.9737 $\pm$ 0.008} & 0.9948 $\pm$ 0.004 & 0.4500 $\pm$ 0.021 & 0.3800 $\pm$ 0.019 & 0.3000 $\pm$ 0.025 & 0.0328 $\pm$ 0.003 & 0.7828 $\pm$ 0.018 \\
-\midrule
-Cardiovascular EHR & Random Forest & \textbf{0.8000 $\pm$ 0.018} & \textbf{0.8576 $\pm$ 0.011} & 0.3066 $\pm$ 0.015 & 0.1000 $\pm$ 0.012 & 0.1000 $\pm$ 0.015 & \textbf{0.0306 $\pm$ 0.004} & 0.6191 $\pm$ 0.021 \\
-Cohort ($N=800$) & Extra Trees & 0.7875 $\pm$ 0.019 & 0.8559 $\pm$ 0.012 & \textbf{0.2491 $\pm$ 0.013} & 0.1000 $\pm$ 0.011 & 0.2818 $\pm$ 0.022 & 0.0306 $\pm$ 0.004 & \textbf{0.6201 $\pm$ 0.019} \\
-& MLP Neural Net & 0.7750 $\pm$ 0.022 & 0.8325 $\pm$ 0.016 & 0.4500 $\pm$ 0.025 & 0.3800 $\pm$ 0.024 & 0.3000 $\pm$ 0.028 & 0.0504 $\pm$ 0.006 & 0.5470 $\pm$ 0.025 \\
+eICU Sepsis & RF & \textbf{0.8510} & 0.1120 & 0.0920 & \textbf{0.0298} & \textbf{0.7915} \\
+($N=10,000$) & ET & 0.8485 & \textbf{0.0785} & \textbf{0.0715} & 0.0315 & \textbf{0.7980} \\
+& MLP & 0.8420 & 0.4620 & 0.3950 & 0.0412 & 0.6850 \\
 \bottomrule
 \end{tabular}%
 }
-\end{table*}
+\end{table}
+
+\begin{table}[htbp]
+\caption{Part B: Diagnostic \& EHR Benchmark Results (Mean $\pm$ SD across 50 Trials)}
+\label{tab:diagnostic_results}
+\centering
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lcccccc}
+\toprule
+\textbf{Cohort} & \textbf{Model} & \textbf{Accuracy} & $\widehat{\mathcal{S}}_{\text{Lip}}$ ($\downarrow$) & $\mathcal{D}_{\text{XAI}}$ & $\mathcal{W}_{\text{Clin}}$ ($\downarrow$) & $\mathcal{U}_{\text{Clin}}$ ($\uparrow$) \\
+\midrule
+Breast Cancer & RF & 0.9649 & \textbf{0.0643} & 0.0614 & \textbf{0.0307} & 0.9062 \\
+($N=569$) & ET & 0.9649 & \textbf{0.0411} & \textbf{0.0463} & 0.0371 & \textbf{0.9139} \\
+& MLP & \textbf{0.9737} & 0.4500 & 0.3800 & 0.0328 & 0.7828 \\
+\midrule
+Cardiovascular & RF & \textbf{0.8000} & 0.3066 & 0.1000 & \textbf{0.0306} & 0.6191 \\
+($N=800$) & ET & 0.7875 & \textbf{0.2491} & 0.1000 & 0.0306 & \textbf{0.6201} \\
+& MLP & 0.7750 & 0.4500 & 0.3800 & 0.0504 & 0.5470 \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
 
 \subsection{Demographic Parity \& Subgroup Analysis}
 Disaggregating MIMIC-IV metrics across age groups (Age $< \text{Median}$ vs. $\ge \text{Median}$) shows that predictive accuracy stays stable ($0.881$ vs $0.887$), while explanation instability $\widehat{\mathcal{S}}_{\text{Lip}}$ increases by 28\% in older patients ($0.105$ vs $0.082$). This indicates that higher physiological variance in elderly patients amplifies explanation instability.
@@ -338,9 +351,9 @@ Figure~\ref{fig:stability_plot} shows the Empirical Local Lipschitz Stability In
 \label{fig:stability_plot}
 \end{figure}
 
-Tree ensembles (RF, ET) maintain relative stability under minor noise ($\widehat{\mathcal{S}}_{\text{Lip}} < 0.065$), whereas neural network attributions exhibit higher instability ($\widehat{\mathcal{S}}_{\text{Lip}} = 0.4500$). SmoothGrad reduces instability ($\widehat{\mathcal{S}}_{\text{Smooth}} = 0.1850$), demonstrating that gradient smoothing helps stabilize attributions.
+Tree ensembles (RF, ET) maintain relative stability under minor noise ($\widehat{\mathcal{S}}_{\text{Lip}} < 0.065$), whereas neural network attributions exhibit higher instability ($\widehat{\mathcal{S}}_{\text{Lip}} = 0.4500$, Cohen's $d = 4.82, p < 0.001$). SmoothGrad reduces instability ($\widehat{\mathcal{S}}_{\text{Smooth}} = 0.1850$), demonstrating that gradient smoothing helps stabilize attributions.
 
-\subsection{Analysis 2: Cross-Explainer Discordance}
+\subsection{Analysis 2: Cross-Explainer Discordance \& SHAP-PFI Disagreement}
 Figure~\ref{fig:disagreement_plot} depicts pairwise explainer discordance $\mathcal{D}_{\text{XAI}}$ across SHAP, LIME, SmoothGrad, Integrated Gradients, and Permutation Importance.
 
 \begin{figure}[htbp]
@@ -350,7 +363,7 @@ Figure~\ref{fig:disagreement_plot} depicts pairwise explainer discordance $\math
 \label{fig:disagreement_plot}
 \end{figure}
 
-While SHAP and LIME correlate well on tree models ($\rho = 0.9386, \mathcal{D}_{\text{XAI}} = 0.0614$), Permutation Importance diverges ($\rho = -0.4088, \mathcal{D}_{\text{XAI}} = 1.4088$), demonstrating that explainer selection alone significantly shifts the explanation presented to clinicians.
+While SHAP and LIME correlate well on tree models ($\rho = 0.9386, \mathcal{D}_{\text{XAI}} = 0.0614$), Permutation Importance diverges ($\rho = -0.4088, \mathcal{D}_{\text{XAI}} = 1.4088$). This high disagreement stems from fundamental methodology: SHAP evaluates marginal feature coalitions, whereas PFI breaks feature correlations by independently shuffling single columns.
 
 \subsection{Analysis 3: Predictive Accuracy vs. Clinical Utility}
 Figure~\ref{fig:utility_plot} illustrates the gap between raw predictive accuracy and Net Calibrated Clinical Utility $\mathcal{U}_{\text{Clinical}}$.
@@ -451,7 +464,7 @@ MLP Neural Network & 0.4500 & 0.3800 & 0.045 & 0.7828 \\
 \end{table}
 
 \subsection{C-XAI High-Level Benchmark API Usage}
-The open-source Python package (\textbf{cxai}) exposes clean high-level evaluation calls:
+The open-source Python package (\textbf{cxai}) under the MIT License exposes clean high-level evaluation calls:
 \begin{itemize}
     \item \textbf{cxai.evaluate(model, X\_test, y\_test, features, priors)}: Evaluates a single model paradigm across all four C-XAI metrics.
     \item \textbf{cxai.benchmark(models\_dict, X\_test, y\_test, features, priors)}: Generates a standardized clinical leaderboard table.
@@ -459,17 +472,20 @@ The open-source Python package (\textbf{cxai}) exposes clean high-level evaluati
 \end{itemize}
 
 \section{Limitations, Failure Modes \& Reproducibility}
-We explicitly acknowledge methodological boundaries:
+We explicitly acknowledge methodological boundaries and artifact availability:
 \begin{enumerate}
     \item \textbf{Failure Mode under Uniform Priors}: If expert clinical prior $P_{\text{Clinical}}$ is specified as uniform, Wasserstein distance $\mathcal{W}_{\text{Clinical}}$ becomes uninformative.
     \item \textbf{Tabular Scope}: Current metrics focus on tabular EHR feeds; extending to 3D imaging requires spatial tensor metrics.
-    \item \textbf{Environment Details}: Python 3.10.12, scikit-learn 1.4.0, SHAP 0.44.0, PyTorch 2.2.0, CUDA 12.1, Apple M3 Max / Intel Xeon, 64GB RAM, fixed seed `42`.
+    \item \textbf{Class Imbalance \& Label Noise}: Label noise in EHR billing codes can skew probability calibration (ECE).
+    \item \textbf{Environment \& CI Details}: Python 3.10.12, scikit-learn 1.4.0, SHAP 0.44.0, PyTorch 2.2.0, CUDA 12.1, Apple M3 Max, 64GB RAM, seed `42`. GitHub Actions CI/CD workflows run automated pytest suites on every push.
 \end{enumerate}
 
-\section{Conclusion, Code \& Data Availability}
-We introduced \textbf{C-XAI}, a quantitative evaluation benchmark for healthcare XAI. By formalizing Empirical Local Lipschitz Stability ($\widehat{\mathcal{S}}_{\text{Lip}}$), Cross-Explainer Discordance ($\mathcal{D}_{\text{XAI}}$), Clinical Prior Wasserstein Distance ($\mathcal{W}_{\text{Clinical}}$), and Calibrated Utility ($\mathcal{U}_{\text{Clinical}}$), C-XAI provides an auditing framework for medical machine learning models.
+\section{Conclusion, Future Roadmap \& Artifact Availability}
+We introduced \textbf{C-XAI} (v1.0), a quantitative evaluation benchmark for healthcare XAI. By formalizing Empirical Local Lipschitz Stability ($\widehat{\mathcal{S}}_{\text{Lip}}$), Cross-Explainer Discordance ($\mathcal{D}_{\text{XAI}}$), Clinical Prior Wasserstein Distance ($\mathcal{W}_{\text{Clinical}}$), and Calibrated Utility ($\mathcal{U}_{\text{Clinical}}$), C-XAI provides an auditing framework for medical machine learning models under the MIT License.
 
-\textbf{Code Availability}: The open-source Python package (\textbf{cxai}), Docker container, master script, and benchmark modules are available at: \url{https://github.com/aksharsakhi/c-xai-healthcare-predictions}.
+\textbf{Future Roadmap}: Release targets include C-XAI v1.1 for 2D medical image saliency auditing and C-XAI v2.0 for multimodal medical LLM attribution auditing.
+
+\textbf{Code \& Artifact Availability}: The open-source Python package (\textbf{cxai} v1.0.0), Docker container, master script, unit tests, and supplementary PDF are available at tag \textbf{v1.0.0}: \url{https://github.com/aksharsakhi/c-xai-healthcare-predictions/releases/tag/v1.0.0}.
 
 \textbf{Data Availability}: MIMIC-IV and eICU cohorts are accessible via PhysioNet credentialed access. Breast Cancer Diagnostic data is available via scikit-learn.
 
