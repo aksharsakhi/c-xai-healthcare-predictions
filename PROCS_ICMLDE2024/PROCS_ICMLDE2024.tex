@@ -49,7 +49,7 @@
 \title{C-XAI: A Quantitative Evaluation Benchmark for Explanation Stability, Cross-Explainer Discordance, and Calibrated Clinical Utility in Healthcare AI}
 
 \author[a]{Sheela Akshar Sakhi} 
-\author[a]{Ibbraheem}
+\author[a]{Ibbraheem Shaik}
 \author[a]{Settibattini Suhitha}
 \author[b]{Dr. Ramya G. R.\corref{cor1}}
 
@@ -69,11 +69,11 @@ Explainable Artificial Intelligence \sep Clinical Decision Support Systems \sep 
 
 \vspace{-6pt}
 \section{Introduction}
-Intensive care units and acute care facilities routinely deploy machine learning algorithms to assist clinicians in risk monitoring and electronic health record (EHR) parsing \cite{lauritsen2020early, bohlen2021explainable, ramya2021incremental}. Supervised classifiers trained on clinical data registries often surpass conventional risk scores such as APACHE-II or SOFA in predictive discrimination \cite{bohlen2021explainable, johnson2023mimic}. Target applications include mortality prediction, pressure ulcer assessment \cite{alderden2021user}, and oncology progression modeling \cite{keyl2024multimodal}.
+Intensive care units and acute care facilities routinely deploy machine learning algorithms to assist clinicians in risk monitoring and electronic health record (EHR) parsing \cite{lauritsen2020early, bohlen2021explainable, ramya2023tlv}. Supervised classifiers trained on clinical data registries often surpass conventional risk scores such as APACHE-II or SOFA in predictive discrimination \cite{bohlen2021explainable, johnson2023mimic}. Target applications include mortality prediction, pressure ulcer assessment \cite{alderden2021user}, and oncology progression modeling \cite{keyl2024multimodal}.
 
 However, complex predictive models, particularly deep neural networks and gradient-boosted decision trees, operate as opaque black boxes. Medical practitioners cannot responsibly integrate automated diagnostic alerts into clinical workflows without clear visibility into model rationale. Relying on attributions driven by artifactual correlations or measurement noise rather than physiological signals risks diagnostic errors and compromised patient safety \cite{caruana2015intelligible}.
 
-To mitigate these risks and satisfy regulatory mandates from bodies such as the US FDA and EU AI Act, developers apply post-hoc Explainable AI (XAI) techniques \cite{ramya2023effective}. Feature attribution frameworks including SHAP \cite{lundberg2017unified}, LIME \cite{ribeiro2016why}, Integrated Gradients \cite{sundararajan2017axiomatic}, SmoothGrad \cite{smilkov2017smoothgrad}, and Grad-CAM \cite{selvaraju2017grad} generate importance weights to explain individual patient predictions.
+To mitigate these risks and satisfy regulatory mandates from bodies such as the US FDA and EU AI Act, developers apply post-hoc Explainable AI (XAI) techniques \cite{ramya2023explainable}. Feature attribution frameworks including SHAP \cite{lundberg2017unified}, LIME \cite{ribeiro2016why}, Integrated Gradients \cite{sundararajan2017axiomatic}, SmoothGrad \cite{smilkov2017smoothgrad}, and Grad-CAM \cite{selvaraju2017grad} generate importance weights to explain individual patient predictions.
 
 \subsection{Evaluation Deficits in Healthcare XAI}
 Despite widespread adoption of post-hoc explainers, systematic analysis of healthcare XAI literature reveals three structural deficiencies:
@@ -132,7 +132,7 @@ Shen et al. \cite{shen2024interpretable} & Prognosis Review & Decision Trees, LR
 Medical XAI methodologies are categorized into three primary paradigms:
 \begin{enumerate}\setlength{\itemsep}{0pt}\setlength{\parsep}{0pt}\setlength{\parskip}{0pt}
     \item \textbf{Post-Hoc Feature Attribution}: Algorithms like SHAP \cite{lundberg2017unified} and LIME \cite{ribeiro2016why} approximate local feature importance via perturbation sampling or Shapley values.
-    \item \textbf{Gradient-Based Attribution}: Methods such as Grad-CAM \cite{selvaraju2017grad}, Integrated Gradients \cite{sundararajan2017axiomatic}, and SmoothGrad \cite{smilkov2017smoothgrad} leverage backpropagated gradients to identify influential input features.
+    \item \textbf{Gradient-Based Attribution}: Methods such as Grad-CAM \cite{selvaraju2017grad}, Integrated Gradients \cite{sundararajan2017axiomatic}, and SmoothGrad \cite{smilkov2017smoothgrad} leverage backpropagated gradients to identify influential input features \cite{ramya2024understanding}.
     \item \textbf{Intrinsically Interpretable Models}: Architectures including Generalized Additive Models (GAMs) and Explainable Boosting Machines (EBMs) \cite{caruana2015intelligible} constrain model capacity to enable direct feature inspection.
 \end{enumerate}
 
@@ -161,7 +161,7 @@ We formalize four quantitative metrics evaluating explanation quality and human-
 Let $\mathcal{f}: \mathcal{X} \rightarrow \mathcal{Y}$ denote a classifier mapping input features $\mathcal{X} \subseteq \mathbb{R}^d$ to outcome $\mathcal{Y} \in \{0, 1\}$. For a patient sample $x \in \mathcal{X}$, an explainer $\mathcal{E}$ yields attribution vector $\mathcal{E}_{\mathcal{f}}(x) = (e_1, e_2, \dots, e_d)^T \in \mathbb{R}^d$.
 
 \subsection{Empirical Local Lipschitz Explanation Stability ($\widehat{\mathcal{S}}_{\text{Lip}}$)}
-Clinical features exhibit natural variance from sensor tolerance and biological fluctuations. An explanation is considered unstable if small perturbations $\delta$ induce disproportionately large variations in attributions $\mathcal{E}_{\mathcal{f}}(x)$ \cite{ramya2023detection}.
+Clinical features exhibit natural variance from sensor tolerance and biological fluctuations. An explanation is considered unstable if small perturbations $\delta$ induce disproportionately large variations in attributions $\mathcal{E}_{\mathcal{f}}(x)$ \cite{ramya2023predictive}.
 
 \begin{definition}[Empirical Local Lipschitz Stability]
 For perturbation radius $\epsilon > 0$, sample size $M$, and constant $\delta_0 = 10^{-8}$, the Empirical Local Lipschitz Stability Index $\widehat{\mathcal{S}}_{\text{Lip}}(x, \epsilon)$ is defined as:
