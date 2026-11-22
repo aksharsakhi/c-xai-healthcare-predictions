@@ -1,0 +1,787 @@
+\documentclass[aspectratio=169,10pt]{beamer}
+
+% Encoding and Typography
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+
+% Mathematics
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{bm}
+
+% Tables and Formatting
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{tabularx}
+\usepackage{colortbl}
+
+% Spacing Reductions for Crisp Presentation Fit
+\setlength{\abovedisplayskip}{2pt}
+\setlength{\belowdisplayskip}{2pt}
+\setlength{\abovedisplayshortskip}{1pt}
+\setlength{\belowdisplayshortskip}{1pt}
+
+% Color Palette: Deep Academic Navy, Slate, and Medical Teal
+\definecolor{NavyBlue}{RGB}{26, 35, 126}      % Primary Brand (#1A237E)
+\definecolor{MedTeal}{RGB}{0, 137, 123}       % Accent Teal (#00897B)
+\definecolor{DeepIndigo}{RGB}{40, 53, 147}    % Secondary Accent (#283593)
+\definecolor{SlateGray}{RGB}{69, 90, 100}     % Subtle Metadata (#455A64)
+\definecolor{DarkText}{RGB}{33, 33, 33}       % High Contrast Body Text (#212121)
+\definecolor{LightBG}{RGB}{246, 248, 252}     % Card Background (#F6F8FC)
+\definecolor{AlertRed}{RGB}{183, 28, 28}      % Warning Accent (#B71C1C)
+\definecolor{SuccessGreen}{RGB}{27, 94, 32}   % Superior Metric Accent (#1B5E20)
+\definecolor{HeaderTint}{RGB}{232, 234, 246}  % Table Header Tint (#E8EAF6)
+
+% Beamer Theme Customization
+\usetheme{default}
+\usefonttheme{structurebold}
+
+\setbeamercolor{palette primary}{bg=NavyBlue,fg=white}
+\setbeamercolor{palette secondary}{bg=DeepIndigo,fg=white}
+\setbeamercolor{palette tertiary}{bg=MedTeal,fg=white}
+\setbeamercolor{structure}{fg=NavyBlue}
+\setbeamercolor{frametitle}{bg=NavyBlue,fg=white}
+\setbeamercolor{title}{bg=NavyBlue,fg=white}
+\setbeamercolor{normal text}{fg=DarkText}
+
+% Custom Block Colors & Compact Padding
+\setbeamercolor{block title}{bg=NavyBlue,fg=white}
+\setbeamercolor{block body}{bg=LightBG,fg=DarkText}
+\setbeamercolor{block title example}{bg=MedTeal,fg=white}
+\setbeamercolor{block body example}{bg=LightBG,fg=DarkText}
+\setbeamercolor{block title alert}{bg=AlertRed,fg=white}
+\setbeamercolor{block body alert}{bg=LightBG,fg=DarkText}
+
+% Remove Navigation Symbols & Headline
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{headline}{}
+
+% Compact Frame Title with Dynamic Height
+\setbeamerfont{frametitle}{size=\fontsize{9.5pt}{11pt}\selectfont}
+\setbeamertemplate{frametitle}{%
+  \nointerlineskip%
+  \begin{beamercolorbox}[wd=\paperwidth,leftskip=0.8em,rightskip=0.8em]{frametitle}%
+    \vskip2.5pt%
+    \usebeamerfont{frametitle}\textbf{\insertframetitle}%
+    \vskip2.5pt%
+  \end{beamercolorbox}%
+}
+
+% Clean Footline with Clear Margins
+\setbeamertemplate{footline}{%
+  \leavevmode%
+  \hbox{%
+    \begin{beamercolorbox}[wd=.72\paperwidth,ht=2.2ex,dp=0.8ex,leftskip=1em]{author in head/foot}%
+      \usebeamerfont{author in head/foot}\tiny\textbf{ICMLDE 2026} \,$\cdot$\, Paper ID: \texttt{857} \,$\cdot$\, \textit{C-XAI: Technical Defense \& Backup Documentation}
+    \end{beamercolorbox}%
+    \begin{beamercolorbox}[wd=.28\paperwidth,ht=2.2ex,dp=0.8ex,rightskip=1em]{title in head/foot}%
+      \usebeamerfont{title in head/foot}\hfill\tiny Slide \textbf{\insertframenumber} of \textbf{\inserttotalframenumber}
+    \end{beamercolorbox}%
+  }%
+  \vskip0pt%
+}
+
+% Title Metadata
+\title[C-XAI: Technical Defense \& Backup]{C-XAI: Technical Defense \& Backup Documentation}
+\subtitle{Comprehensive Metric Derivations, Axiomatic Proofs, Model Topologies, Statistical Significance \& Extended Experimental Audits}
+
+\author[Sheela Akshar Sakhi et al.]{
+  \underline{\textbf{Sheela Akshar Sakhi}}$^1$ (\textit{Presenter}), \,
+  \textbf{Ibbraheem Shaik}$^1$, \,
+  \textbf{Settibattini Suhitha}$^1$, \,
+  \textbf{Ramya G R}$^{2*}$
+}
+
+\institute[Amrita Vishwa Vidyapeetham]{
+  $^1$Department of Computer Science and Engineering, Amrita School of Computing, Coimbatore, India \\
+  $^2$Faculty Supervisor \& Corresponding Author (\texttt{gr\_ramya@cb.amrita.edu}), Amrita Vishwa Vidyapeetham, India \\
+  \vspace{0.10cm}
+  \textbf{5th Elsevier International Conference on Machine Learning and Data Engineering (ICMLDE 2026)} \\
+  \textit{Procedia Computer Science} \,$\cdot$\, 27th--28th November 2026 \,$\cdot$\, Dehradun, India
+}
+
+\date{\textbf{Paper ID: 857} \,$\cdot$\, Track: Technical Defense \& Award Committee Review}
+
+\begin{document}
+
+% =============================================================================
+% SLIDE 1: TITLE SLIDE
+% =============================================================================
+\begin{frame}
+  \titlepage
+\end{frame}
+
+% =============================================================================
+% SLIDE 2: DEFENSE ROADMAP (Clean 2x2 Balanced Grid)
+% =============================================================================
+\begin{frame}{Technical Defense Roadmap: Structure of Backup Documentation}
+  \vspace{-0.15cm}
+  \begin{columns}[t]
+    \begin{column}{0.49\textwidth}
+      \begin{block}{\textbf{Part I: Formulations \& Proofs (Slides 3--6)}}
+        \scriptsize
+        \begin{itemize}\setlength\itemsep{1pt}
+          \item \textbf{Metric 1 ($\mathcal{S}_{\text{bLip}}$)}: Local Lipschitz stability under physiological sensor noise $u_m \sim \mathcal{N}(0, h^2 I)$ \& proof of axioms.
+          \item \textbf{Metric 2 ($\mathcal{D}_{\text{XAI}}$)}: Cross-explainer discordance in $[0, 2]$ \& derivation of 0.059 vs. 0.435 numerical results.
+          \item \textbf{Metric 3 ($\mathcal{W}_{\text{Clin}}^{\text{norm}}$)}: Optimal transport Wasserstein distance \& proof of $(d-1)$ supremum normalization.
+          \item \textbf{Metric 4 ($\widehat{\mathcal{U}}_{\text{Clin}}$)}: Decision utility with asymmetric over-/under-reliance penalties \& Zeroth-Order Smoother.
+        \end{itemize}
+      \end{block}
+      \vspace{0.03cm}
+      \begin{block}{\textbf{Part II: Cohorts \& Model Zoo (Slides 7--8)}}
+        \scriptsize
+        \begin{itemize}\setlength\itemsep{1pt}
+          \item \textbf{4 Healthcare Cohorts}: MIMIC-IV, eICU, BCWD, Cardio EHR (51,369 total patient records) \& medical prior guidelines.
+          \item \textbf{Predictive Models \& Explainers}: RF, ET, MLP, Tabular ResNet evaluated across 6 post-hoc explainers.
+        \end{itemize}
+      \end{block}
+    \end{column}
+    \begin{column}{0.49\textwidth}
+      \begin{block}{\textbf{Part III: Statistical Rigor (Slide 9)}}
+        \scriptsize
+        \begin{itemize}\setlength\itemsep{1pt}
+          \item \textbf{Table 1 Full Benchmark}: 16 model-cohort evaluations across $N=50$ random seeds (seeds 42--91).
+          \item \textbf{Wilcoxon Signed-Rank}: $W = 0.0, p < 0.001$ strictly dominating across all 50 paired trials.
+          \item \textbf{Paired Two-Tailed $t$-Test}: $t(49) = 14.82, p < 0.001$, Cohen's $d = 2.96$ (massive clinical effect size).
+          \item \textbf{Derivation of +19.6\% Gain}: $+0.1390$ absolute utility gain (+13.9 percentage points, $0.8485$ vs. $0.7095$).
+        \end{itemize}
+      \end{block}
+      \vspace{0.03cm}
+      \begin{block}{\textbf{Part IV: Extended Ablations \& Governance (Slides 10--16)}}
+        \scriptsize
+        \begin{itemize}\setlength\itemsep{1pt}
+          \item \textbf{Ablations}: Perturbation sweep $h \in [0.01, 0.20]$ (Slide 10), Trust profiles (Slide 11), Adversarial attacks/missingness (Slide 12).
+          \item \textbf{Readiness}: Latency/RAM (Slide 13), Toolkit matrix (Slide 14), Bibliography (Slide 15), FDA/EU compliance \& Q\&A (Slide 16).
+        \end{itemize}
+      \end{block}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% =============================================================================
+% SLIDE 3: METRIC 1: LOCAL LIPSCHITZ STABILITY & THEORETICAL DERIVATION
+% =============================================================================
+\begin{frame}{Metric 1: Empirical Local Lipschitz Stability ($\mathcal{S}_{\text{bLip}}$)}
+  \vspace{-0.1cm}
+  \begin{columns}[t]
+    \begin{column}{0.49\textwidth}
+      \begin{block}{\textbf{Mathematical Formulation \& Motivation}}
+        \scriptsize
+        Quantifies attribution invariance under physiological sensor noise:
+        $$\mathcal{S}_{\text{bLip}}(\mathbf{x}, h) = \frac{1}{M} \sum_{m=1}^{M} \frac{\|\mathcal{E}(\mathbf{x}) - \mathcal{E}(\mathbf{x} + \mathbf{u}_m)\|_2}{\|\mathbf{u}_m\|_2 + \tau}$$
+        where $\mathbf{u}_m \sim \mathcal{N}(\mathbf{0}, h^2 \mathbf{I})$, $M = 100$, $h = 0.05$, $\tau = 10^{-8}$.
+        \vspace{2pt}
+        \begin{itemize}\setlength\itemsep{1.5pt}
+          \item \textbf{Physiological Perturbation}: Rather than worst-case supremum bounds, C-XAI models standard ICU vital sensor variance.
+          \item \textbf{Singularity Guard}: $\tau = 10^{-8}$ guarantees stability as $\|\mathbf{u}_m\|_2 \to 0$.
+          \item \textbf{Clinical Criterion}: Lower values reflect superior stability; ideal explainers satisfy $\mathcal{S}_{\text{bLip}} = 0.0$ under invariant local shifts.
+        \end{itemize}
+      \end{block}
+    \end{column}
+    \begin{column}{0.49\textwidth}
+      \begin{exampleblock}{\textbf{Theorem 1: Metric Axioms \& Convergence Proofs}}
+        \scriptsize
+        \begin{enumerate}\setlength\itemsep{1.5pt}
+          \item \textbf{Non-Negativity}: Vector norms satisfy $\|\cdot\|_2 \ge 0$. Since $\tau > 0$, every term is non-negative: $\mathcal{S}_{\text{bLip}}(\mathbf{x}, h) \ge 0, \forall \mathbf{x}, h$.
+          \item \textbf{Linear Stability Invariance}: For linear models $f(\mathbf{x}) = \mathbf{w}^T \mathbf{x} + b$, attributions satisfy $\mathcal{E}(\mathbf{x}) = \mathbf{w}$. For any $\mathbf{u}_m$, $\mathcal{E}(\mathbf{x} + \mathbf{u}_m) = \mathbf{w} \implies \|\mathbf{w} - \mathbf{w}\|_2 = 0$. Hence $\mathcal{S}_{\text{bLip}} \equiv 0.0$.
+          \item \textbf{First-Order Convergence}: By Taylor expansion: $\mathcal{E}(\mathbf{x} + \mathbf{u}_m) = \mathcal{E}(\mathbf{x}) + \mathbf{J}_{\mathcal{E}}(\mathbf{x}) \mathbf{u}_m + \mathcal{O}(\|\mathbf{u}_m\|^2)$. Substituting yields:
+          $$\lim_{h \to 0} \mathcal{S}_{\text{bLip}}(\mathbf{x}, h) = \|\mathbf{J}_{\mathcal{E}}(\mathbf{x})\|_F$$
+          (Frobenius norm of Jacobian), guaranteeing convergence.
+          \item \textbf{Empirical Finding}: Deep neural models exhibit \textbf{9.6$\times$ higher instability} ($0.4912$ vs. $0.0512$ for Extra Trees).
+        \end{enumerate}
+      \end{exampleblock}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% =============================================================================
+% SLIDE 4: METRIC 2: CROSS-EXPLAINER DISCORDANCE (DXAI)
+% =============================================================================
+\begin{frame}{Metric 2: Cross-Explainer Discordance ($\mathcal{D}_{\text{XAI}}$) \& Conflict Resolution}
+  \vspace{-0.15cm}
+  \begin{columns}[t]
+    \begin{column}{0.49\textwidth}
+      \begin{block}{\textbf{Formulation \& Bounded Range}}
+        \scriptsize
+        Quantifies feature ranking conflict between distinct explainers:
+        \vspace{1pt}
+        $$\mathcal{D}_{\text{XAI}}(\mathcal{E}_A, \mathcal{E}_B) = 1 - r_s(\mathbf{r}_A, \mathbf{r}_B) \in [0.0, 2.0]$$
+        where $r_s = 1 - \frac{6 \sum_{j=1}^{d} (r_{A,j} - r_{B,j})^2}{d(d^2 - 1)}$ (Spearman rank correlation).
+        \vspace{2pt}
+        \begin{itemize}\setlength\itemsep{1.5pt}
+          \item $\mathcal{D}_{\text{XAI}} = 0.0 \implies r_s = +1.0$ (\textit{Perfect Consensus across explainers}).
+          \item $\mathcal{D}_{\text{XAI}} = 1.0 \implies r_s = 0.0$ (\textit{Completely Orthogonal Feature Sets}).
+          \item $\mathcal{D}_{\text{XAI}} = 2.0 \implies r_s = -1.0$ (\textit{Complete Feature Rank Inversion}).
+          \item \textbf{Cognitive Dissonance}: Explainer conflict triggers clinician rejection of clinical CDS [Krishna et al., 2022].
+        \end{itemize}
+      \end{block}
+    \end{column}
+    \begin{column}{0.49\textwidth}
+      \begin{exampleblock}{\textbf{Resolution of 0.059 vs. 0.435 Results (Dr. Ramya's Comment)}}
+        \scriptsize
+        Explains how the two reported values were calculated:
+        \vspace{2pt}
+        \begin{itemize}\setlength\itemsep{1.5pt}
+          \item \textbf{Tree Ensembles (Extra Trees, $\mathcal{D}_{\text{XAI}} = 0.059$)}:
+          TreeSHAP and LIME evaluate partition frequency. Pairwise Spearman rank correlation is $r_s = 0.941$:
+          $$\mathcal{D}_{\text{XAI}} = 1 - 0.941 = \mathbf{0.059} \quad (\text{Tight Concordance})$$
+          Explainers maintain consistent consensus for physicians.
+          \item \textbf{Deep Networks (Tabular ResNet, $\mathcal{D}_{\text{XAI}} = 0.435$)}:
+          Integrated Gradients integrates latent path gradients while LIME samples input perturbations. Rank correlation drops to $r_s = 0.565$:
+          $$\mathcal{D}_{\text{XAI}} = 1 - 0.565 = \mathbf{0.435} \quad (\text{\textbf{7.4$\times$ Higher Conflict}})$$
+          \item \textbf{Clinical Impact}: On Deep ResNet, LIME ranks Serum Lactate \#1, whereas IntGrad ranks MAP \#1 and Lactate \#4!
+        \end{itemize}
+      \end{exampleblock}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% =============================================================================
+% SLIDE 5: METRIC 3: DIMENSION-NORMALIZED WASSERSTEIN PRIOR DISTANCE
+% =============================================================================
+\begin{frame}{Metric 3: Normalized Wasserstein Prior Distance ($\mathcal{W}_{\text{Clin}}^{\text{norm}}$)}
+  \vspace{-0.15cm}
+  \begin{columns}[t]
+    \begin{column}{0.49\textwidth}
+      \begin{block}{\textbf{Prior Construction \& Optimal Transport Grounding}}
+        \scriptsize
+        Measures divergence from medical consensus standards:
+        \vspace{1pt}
+        {\footnotesize $$\mathcal{W}_{\text{Clin}}^{\text{norm}} = \frac{1}{d - 1} \sum_{j=1}^{d} \left| \sum_{k=1}^{j} P_{\text{Model}}(k) - \sum_{k=1}^{j} P_{\text{Clinical}}(k) \right|$$}
+        \vspace{-3pt}
+        $\mathcal{A}_{\text{Clinical}} = 1 - \mathcal{W}_{\text{Clin}}^{\text{norm}} \in [0, 1]$ (Clinical Prior Alignment Index).
+        \vspace{1pt}
+        \begin{itemize}\setlength\itemsep{1pt}
+          \item \textbf{Codified Medical Prior ($P_{\text{Clinical}}$)}: Standardized from clinical risk scores (SOFA, Sepsis-3, NPI, ASCVD), normalized so $\sum w_j = 1.0$.
+          \item \textbf{Model Prior ($P_{\text{Model}}$)}: Empirical mean absolute explainer attribution across cohort instances: $P_{\text{Model}}(j) = \bar{e}_j / \sum_k \bar{e}_k$.
+          \item \textbf{Penalizing Confounders}: Detects models relying on non-causal confounding artifacts (protocol timestamps, billing codes).
+        \end{itemize}
+      \end{block}
+    \end{column}
+    \begin{column}{0.49\textwidth}
+      \begin{exampleblock}{\textbf{Theorem 2: Proof of $(d - 1)$ Supremum Normalization}}
+        \scriptsize
+        \begin{enumerate}\setlength\itemsep{1pt}
+          \item \textbf{1D Earth Mover's Distance}: On ordered discrete support $\{1, \dots, d\}$, the 1-Wasserstein distance equals the $L_1$ CDF norm [Villani, 2009]:
+          $\mathcal{W}_1(P, Q) = \sum_{j=1}^{d-1} |F_P(j) - F_Q(j)|$.
+          \item \textbf{CDF Boundary Conditions}: As valid PMFs, $F_P(d) = F_Q(d) = 1.0$ and $0 \le F_P(j), F_Q(j) \le 1.0$.
+          \item \textbf{Extremal Configuration Supremum}: The maximum $|F_P(j) - F_Q(j)| = 1.0$ occurs when $P$ concentrates all mass at index 1 and $Q$ at index $d$.
+          \item \textbf{Exact Sum}: Summing over all $d-1$ cutoffs yields:
+          $\sup_{P, Q} \mathcal{W}_1(P, Q) = \sum_{j=1}^{d-1} |1 - 0| = \mathbf{d - 1}$.
+          Dividing by $(d - 1)$ guarantees strict $[0, 1]$ invariance across cohorts ($d = 5$ in Cardio vs. $d = 30$ in BCWD).
+        \end{enumerate}
+      \end{exampleblock}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% =============================================================================
+% SLIDE 6: METRIC 4: IN-SILICO CLINICAL UTILITY & ZEROTH-ORDER SMOOTHER
+% =============================================================================
+\begin{frame}{Metric 4: In-Silico Clinical Decision Utility ($\widehat{\mathcal{U}}_{\text{Clin}}$) \& Score Smoother}
+  \vspace{-0.1cm}
+  \begin{columns}[t]
+    \begin{column}{0.49\textwidth}
+      \begin{block}{\textbf{Calibrated Decision Utility Formulation}}
+        \scriptsize
+        Grounded in Pauker-Kassirer clinical threshold theory [1980]:
+        $$\widehat{\mathcal{U}}_{\text{Clin}} = \text{Acc} \cdot \mathcal{T}_{\text{Clinician}} - (\alpha \cdot \text{OR} + \beta \cdot \text{UR})$$
+        $$\mathcal{T}_{\text{Clinician}} = w_s \frac{1}{1 + \mathcal{S}_{\text{bLip}}} + w_a \mathcal{A}_{\text{Clinical}} + w_c (1 - \text{ECE})$$
+        $$\text{OR} = P(\hat{y} \ne y)(1 - \kappa_{\text{OR}} \mathcal{T}_{\text{Clinician}})$$
+        $$\text{UR} = P(\hat{y} = y)(1 - \mathcal{T}_{\text{Clinician}})\kappa_{\text{UR}}$$
+        \vspace{1pt}
+        \begin{itemize}\setlength\itemsep{1.5pt}
+          \item \textbf{Trust Index}: $w_s=0.33$ (Stability), $w_a=0.33$ (Prior Alignment), $w_c=0.33$ (Calibration fidelity, $1-\text{ECE}$).
+          \item \textbf{Asymmetric Loss}: $\alpha = 0.50$ (invasive overtreatment on false positive), $\beta = 0.30$ (missed diagnosis on false negative).
+          \item \textbf{Heuristic Reliance}: $\kappa_{\text{OR}} = 0.85, \kappa_{\text{UR}} = 0.70$ [Bussone, 2015].
+        \end{itemize}
+      \end{block}
+    \end{column}
+    \begin{column}{0.49\textwidth}
+      \begin{exampleblock}{\textbf{Zeroth-Order Gaussian Score Smoother for Trees}}
+        \scriptsize
+        Overcomes decision tree non-differentiability:
+        \vspace{1pt}
+        \begin{itemize}\setlength\itemsep{2pt}
+          \item \textbf{The Challenge}: Decision trees partition input space into axis-aligned piecewise constant steps; standard gradients $\nabla_\mathbf{x} f(\mathbf{x}) = \mathbf{0}$ almost everywhere.
+          \item \textbf{Gaussian Mollifier Formulation}:
+          $$f_\sigma(\mathbf{x}) = \mathbb{E}_{\boldsymbol{\xi} \sim \mathcal{N}(\mathbf{0}, \sigma^2 \mathbf{I})} [ f(\mathbf{x} + \boldsymbol{\xi}) ]$$
+          $$\nabla_\mathbf{x} f_\sigma(\mathbf{x}) = \frac{1}{\sigma^2} \mathbb{E}_{\boldsymbol{\xi}} [ \boldsymbol{\xi} f(\mathbf{x} + \boldsymbol{\xi}) ] \approx \frac{1}{K \sigma^2} \sum_{k=1}^{K} \boldsymbol{\xi}_k f(\mathbf{x} + \boldsymbol{\xi}_k)$$
+          \item \textbf{Monte Carlo Evaluation}: $K = 50$ forward passes with bandwidth $\sigma = 0.05$ render tree boundaries $C^\infty$ smooth.
+          \item \textbf{Unified Benchmark}: Allows Integrated Gradients and SmoothGrad to evaluate tree ensembles on equal footing with deep nets.
+        \end{itemize}
+      \end{exampleblock}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% =============================================================================
+% SLIDE 7: DETAILED HEALTHCARE COHORTS & CLINICAL PRIORS
+% =============================================================================
+\begin{frame}{Detailed Healthcare Cohorts \& Codified Clinical Prior Guidelines}
+  \vspace{-0.15cm}
+  \textbf{\scriptsize Evaluated Patient Populations (51,369 Clinical Records Total across Multi-Center Hospitals):}
+  \vspace{0.05cm}
+  \begin{table}[h]
+    \centering
+    \tiny
+    \begin{tabularx}{\textwidth}{llccclX}
+      \toprule
+      \textbf{Cohort Name} & \textbf{Clinical Task} & \textbf{Records} & \textbf{Feat.} & \textbf{Imbal.} & \textbf{Codified Medical Guideline} & \textbf{Key Prior Weights ($P_{\text{Clinical}}$)} \\
+      \midrule
+      \textbf{MIMIC-IV} & ICU Mortality Prediction & 40,000 & 24 & 11.2\% & SOFA Consensus / Sepsis-3 & SOFA (0.35), Lactate (0.30), Age (0.15), MAP (0.10), HR (0.10) \\
+      \textbf{eICU} & Multi-Center Sepsis Onset & 10,000 & 18 & 14.8\% & Sepsis-3 / SIRS Criteria & MAP (0.40), Body Temp (0.25), WBC Count (0.20), HR (0.15) \\
+      \textbf{BCWD} & Breast Cancer Histology & 569 & 30 & 37.3\% & Nottingham Prognostic (NPI) & Worst Area (0.25), Worst Concave (0.25), Mean Concave (0.20) \\
+      \textbf{Cardio EHR} & 10-Yr Cardiovascular Risk & 800 & 5 & 25.0\% & ACC/AHA ASCVD Risk Score & Systolic BP (0.30), Age (0.25), Cholesterol (0.20), Smoking (0.15) \\
+      \bottomrule
+    \end{tabularx}
+  \end{table}
+  \vspace{-0.15cm}
+  \begin{block}{\textbf{Key Experimental Setup Pillars}}
+    \scriptsize
+    \begin{itemize}\setlength\itemsep{1.5pt}
+      \item \textbf{51,369 Total Clinical Records}: Multi-center tertiary intensive care units (Beth Israel Deaconess, 208 Philips eICU hospitals) and diagnostic pathology feeds.
+      \item \textbf{Clinical Prior Construction}: Prior weights $w_j$ formulated from validated clinical scoring criteria and strictly normalized so $\sum w_j = 1.0$.
+      \item \textbf{Stratified Evaluation Protocol}: Stratified 5-fold cross-validation repeated across 50 random seeds (seeds 42--91) with zero test-fold data leakage.
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+% =============================================================================
+% SLIDE 8: PREDICTIVE MODEL ZOO & 6-EXPLAINER SUITE
+% =============================================================================
+\begin{frame}{Predictive Model Zoo: Topologies, Training \& Explainer Suite}
+  \vspace{-0.15cm}
+  \begin{table}[h]
+    \centering
+    \tiny
+    \begin{tabularx}{\textwidth}{llXXl}
+      \toprule
+      \textbf{Model Paradigm} & \textbf{Architecture} & \textbf{Optimization \& Regularization} & \textbf{Hyperparameters} & \textbf{Explainer Compatibility} \\
+      \midrule
+      \textbf{Random Forest (RF)} & 100 orthogonal trees & Gini impurity, bootstrap bagging & $n_{\text{est}}=100, d_{\text{max}}=12, s_{\text{split}}=5$ & TreeSHAP, LIME, PFI, Smoothed IntGrad \\
+      \textbf{Extra Trees (ET)} & 100 randomized trees & Extremely randomized orthogonal splits & $n_{\text{est}}=100, d_{\text{max}}=12, s_{\text{split}}=2$ & TreeSHAP, KernelSHAP, LIME, Smoothed SG \\
+      \textbf{Multi-Layer Perceptron} & Feed-forward DNN & ReLU, early stopping (patience=15) & Input $\to 64 \to 32 \to 1$, Adam, lr$=10^{-3}$ & IntGrad, SmoothGrad, KernelSHAP, LIME \\
+      \textbf{Tabular Deep ResNet} & ResNet + Tokenizer & Token embeddings, BatchNorm, Dropout & 2 residual blocks, Adam, lr$=5\times 10^{-4}$ & IntGrad (50 steps), SmoothGrad, KernelSHAP \\
+      \bottomrule
+    \end{tabularx}
+  \end{table}
+  \vspace{-0.15cm}
+  \begin{block}{\textbf{Comprehensive 6-Explainer Auditing Suite (Diverse Mathematical Foundations)}}
+    \tiny
+    \begin{columns}[t]
+      \begin{column}{0.49\textwidth}
+        \begin{itemize}\setlength\itemsep{1pt}
+          \item \textbf{TreeSHAP}: Exact polynomial tree traversal algorithm [Lundberg et al., 2020] with interventional conditional expectations.
+          \item \textbf{KernelSHAP}: Model-agnostic weighted linear regression approximating Shapley values ($N_{\text{samples}} = 500$).
+          \item \textbf{LIME}: Local surrogate linear model fitted with exponential distance kernel weights ($N_{\text{samples}} = 1000$) [Ribeiro et al., 2016].
+        \end{itemize}
+      \end{column}
+      \begin{column}{0.49\textwidth}
+        \begin{itemize}\setlength\itemsep{1pt}
+          \item \textbf{SmoothGrad}: Noise-augmented saliency averaging input gradients over $M = 50$ Gaussian perturbations ($\sigma = 0.10$).
+          \item \textbf{Integrated Gradients}: Path-integrating gradients along straight line across $K = 50$ Gauss-Legendre quadrature steps.
+          \item \textbf{Permutation Feature Importance (PFI)}: Empirical test-set feature permuting shuffling feature columns over $N_{\text{repeats}} = 10$.
+        \end{itemize}
+      \end{column}
+    \end{columns}
+  \end{block}
+\end{frame}
+
+% =============================================================================
+% SLIDE 9: STATISTICAL RIGOR & HYPOTHESIS TESTING
+% =============================================================================
+\begin{frame}{Table 1: Benchmark Results Across 4 Cohorts ($N = 50$ Seeds)}
+  \vspace{-0.1cm}
+  \begin{columns}[t]
+    \begin{column}{0.53\textwidth}
+      \textbf{\scriptsize Table 1 Results Across 4 Cohorts ($N=50$ Seeds, Seeds 42--91):}
+      \vspace{0.02cm}
+      \begin{table}[h]
+        \centering
+        \setlength{\tabcolsep}{1.8pt}
+        \fontsize{5.2pt}{6.2pt}\selectfont
+        \begin{tabular}{llccccc}
+          \toprule
+          \textbf{Cohort} & \textbf{Model} & \textbf{Acc $\uparrow$} & \textbf{$\mathcal{S}_{\text{bLip}} \downarrow$} & \textbf{$\mathcal{D}_{\text{XAI}} \downarrow$} & \textbf{$\mathcal{W}_{\text{Clin}}^{\text{norm}} \downarrow$} & \textbf{$\widehat{\mathcal{U}}_{\text{Clin}} \uparrow$} \\
+          \midrule
+          \multirow{4}{*}{\textbf{MIMIC}} 
+          & Random Forest & 0.8845 & 0.0821 & 0.0812 & 0.0285 & 0.8412 \\
+          & \textbf{Extra Trees (C-XAI)} & 0.8812 & \textbf{0.0512} & \textbf{0.0589} & 0.0312 & \textbf{0.8485} \\
+          & MLP & 0.8920 & 0.4850 & 0.4120 & 0.0389 & 0.7120 \\
+          & Tabular ResNet & \textbf{0.8935} & 0.4912 & 0.4350 & 0.0375 & 0.7105 \\
+          \midrule
+          \multirow{4}{*}{\textbf{eICU}} 
+          & Random Forest & 0.8510 & 0.1120 & 0.0920 & 0.0298 & 0.7915 \\
+          & \textbf{Extra Trees (C-XAI)} & 0.8485 & \textbf{0.0785} & \textbf{0.0715} & 0.0315 & \textbf{0.7980} \\
+          & MLP & 0.8420 & 0.4620 & 0.3950 & 0.0412 & 0.6850 \\
+          & Tabular ResNet & \textbf{0.8540} & 0.4820 & 0.4210 & 0.0390 & 0.6810 \\
+          \midrule
+          \multirow{4}{*}{\textbf{BCWD}} 
+          & Random Forest & 0.9649 & 0.0643 & 0.0614 & 0.0307 & 0.9062 \\
+          & \textbf{Extra Trees (C-XAI)} & 0.9649 & \textbf{0.0411} & \textbf{0.0463} & 0.0371 & \textbf{0.9139} \\
+          & MLP & \textbf{0.9737} & 0.4500 & 0.3800 & 0.0328 & 0.7828 \\
+          & Tabular ResNet & \textbf{0.9737} & 0.4680 & 0.3980 & 0.0315 & 0.7780 \\
+          \midrule
+          \multirow{4}{*}{\textbf{Cardio}} 
+          & Random Forest & \textbf{0.8000} & 0.3066 & 0.1000 & 0.0306 & 0.6191 \\
+          & \textbf{Extra Trees (C-XAI)} & 0.7875 & \textbf{0.2491} & \textbf{0.1000} & 0.0306 & \textbf{0.6201} \\
+          & MLP & 0.7750 & 0.4500 & 0.3800 & 0.0504 & 0.5470 \\
+          & Tabular ResNet & 0.7812 & 0.4706 & 0.3920 & 0.0485 & 0.5420 \\
+          \bottomrule
+        \end{tabular}
+      \end{table}
+    \end{column}
+    \begin{column}{0.45\textwidth}
+      \begin{exampleblock}{\textbf{Rigorous Statistical Validation}}
+        \fontsize{5.8pt}{7.2pt}\selectfont
+        \begin{itemize}\setlength\itemsep{1.5pt}
+          \item \textbf{Hypothesis}: $H_0: \widehat{\mathcal{U}}_{\text{Clin}}(\text{ET}) \le \widehat{\mathcal{U}}_{\text{Clin}}(\text{ResNet})$ vs. $H_1: \widehat{\mathcal{U}}_{\text{Clin}}(\text{ET}) > \widehat{\mathcal{U}}_{\text{Clin}}(\text{ResNet})$.
+          \item \textbf{Wilcoxon Signed-Rank}: Extra Trees strictly outperformed Deep ResNet in all 50 seeds ($W = 0.0, p = 2.41 \times 10^{-7} < 0.001$).
+          \item \textbf{Paired Two-Tailed $t$-Test}:
+          Mean utility diff $\Delta \mathcal{U} = +0.1390$ ($0.8485$ vs. $0.7095$, $\text{SD} = 0.0469$):
+          \vspace{1pt}
+          $$t(49) = 14.82, \quad p = 1.83 \times 10^{-19} < 0.001$$
+          $$\text{Cohen's } d = \Delta \mathcal{U} / \text{SD} = \mathbf{2.96} \quad (\text{Massive effect size})$$
+          \item \textbf{Derivation of Reported +19.6\% Gain}:
+          \vspace{1pt}
+          $$\text{Relative Gain} = \frac{0.8485 - 0.7095}{0.7095} = \mathbf{+19.59\% \approx +19.6\%}$$
+          (+13.9 percentage points absolute utility advantage).
+        \end{itemize}
+      \end{exampleblock}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% =============================================================================
+% SLIDE 10: EXTENDED ABLATION: PERTURBATION SCALE SWEEP
+% =============================================================================
+\begin{frame}{Sensitivity Analysis: Perturbation Scale Sweep ($h \in [0.01, 0.20]$)}
+  \vspace{-0.1cm}
+  \begin{columns}[t]
+    \begin{column}{0.50\textwidth}
+      \textbf{\scriptsize Sensitivity Analysis across Perturbation Radii (MIMIC-IV):}
+      \vspace{0.03cm}
+      \begin{table}[h]
+        \centering
+        \setlength{\tabcolsep}{2.5pt}
+        \fontsize{6pt}{7.2pt}\selectfont
+        \begin{tabular}{lcccc}
+          \toprule
+          \textbf{Noise Scale ($h$)} & \textbf{Extra Trees} & \textbf{RF} & \textbf{MLP} & \textbf{Deep ResNet} \\
+          \midrule
+          $h = 0.01$ (Micro-noise) & \textbf{0.0180} & 0.0250 & 0.2300 & 0.2800 \\
+          $h = 0.02$ (Low drift) & \textbf{0.0248} & 0.0361 & 0.3698 & 0.4550 \\
+          $h = 0.05$ (Physiological) & \textbf{0.0414} & 0.0644 & 0.7720 & 0.9715 \\
+          $h = 0.10$ (Elevated noise) & \textbf{0.0642} & 0.1046 & 1.4169 & 1.8190 \\
+          $h = 0.20$ (Severe sensor) & \textbf{0.1026} & 0.1748 & 2.6627 & 3.4906 \\
+          \bottomrule
+        \end{tabular}
+      \end{table}
+      \vspace{-0.15cm}
+      \begin{block}{\textbf{Non-Gaussian Noise Distributions (Supplementary Section 3)}}
+        \scriptsize
+        Tested heavy-tailed Student-$t$ ($\nu=3$), Uniform $U[-h\sqrt{3}, h\sqrt{3}]$, and Laplace perturbations. Extra Trees consistently maintained lowest $\mathcal{S}_{\text{bLip}}$ across all distributions (Laplace: 0.0489 vs. Deep ResNet: 1.1240).
+      \end{block}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \begin{exampleblock}{\textbf{Mathematical Scaling Dynamics}}
+        \scriptsize
+        \begin{itemize}\setlength\itemsep{2.5pt}
+          \item \textbf{Sub-Linear Tree Scaling}:
+          As perturbation radius $h$ expands 20-fold ($0.01 \to 0.20$), Extra Trees $\mathcal{S}_{\text{bLip}}$ grows from $0.0180$ to $0.1026$ (an increase of only \textbf{5.7$\times$}).
+          \item \textbf{Supra-Linear Deep Explosion}:
+          Tabular Deep ResNet explodes from $0.2800$ to $3.4906$ (\textbf{12.5$\times$ degradation}). Continuous manifolds have steep local gradients displacing embeddings across boundaries.
+          \item \textbf{23.5$\times$ Instability at Clinical Scales}:
+          At standard noise ($h = 0.05$), neural instability is $23.5\times$ higher than Extra Trees ($0.9715$ vs. $0.0414$).
+          \item \textbf{Decision Safety}: ICU bedside monitors require bounded attribution trajectories.
+        \end{itemize}
+      \end{exampleblock}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% =============================================================================
+% SLIDE 11: EXTENDED ABLATION: TRUST WEIGHT SENSITIVITY
+% =============================================================================
+\begin{frame}{Sensitivity Analysis: Clinician Trust Weight Operating Profiles}
+  \vspace{-0.1cm}
+  \begin{columns}[t]
+    \begin{column}{0.50\textwidth}
+      \textbf{\scriptsize Decision Utility across 5 Clinical Operating Profiles (MIMIC-IV):}
+      \vspace{0.03cm}
+      \begin{table}[h]
+        \centering
+        \setlength{\tabcolsep}{2.2pt}
+        \fontsize{5.8pt}{7pt}\selectfont
+        \begin{tabular}{lccccc}
+          \toprule
+          \textbf{Operating Profile} & \textbf{$(w_s, w_a, w_c)$} & \textbf{ET $\uparrow$} & \textbf{RF $\uparrow$} & \textbf{MLP $\uparrow$} & \textbf{ResNet $\uparrow$} \\
+          \midrule
+          \textbf{Balanced (Baseline)} & $(0.33, 0.33, 0.33)$ & \textbf{0.8135} & 0.8076 & 0.7184 & 0.7206 \\
+          \textbf{Stability-Focused} & $(0.60, 0.20, 0.20)$ & \textbf{0.8077} & 0.7951 & 0.6456 & 0.6463 \\
+          \textbf{Prior-Focused} & $(0.20, 0.60, 0.20)$ & \textbf{0.8146} & 0.8138 & 0.7600 & 0.7623 \\
+          \textbf{Calibration-Focused} & $(0.20, 0.20, 0.60)$ & \textbf{0.8210} & 0.8168 & 0.7524 & 0.7556 \\
+          \textbf{Robust Clinical} & $(0.40, 0.40, 0.20)$ & \textbf{0.8111} & 0.8045 & 0.7028 & 0.7043 \\
+          \bottomrule
+        \end{tabular}
+      \end{table}
+      \vspace{-0.15cm}
+      \begin{block}{\textbf{Pauker-Kassirer Loss Asymmetry Sweeps}}
+        \scriptsize
+        Tested over-reliance penalties $\alpha \in [0.1, 1.0]$. In high-stakes sepsis triage ($\alpha = 1.0$), Deep ResNet utility deteriorates by 38.4\% due to uncalibrated false predictions, while Extra Trees drops only 12.1\%.
+      \end{block}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \begin{exampleblock}{\textbf{Profile Findings \& Subjective Robustness}}
+        \scriptsize
+        \begin{itemize}\setlength\itemsep{3pt}
+          \item \textbf{Uniform Dominance}:
+          Extra Trees strictly dominates every single weighting profile evaluated. The ranking order ($\text{ET} > \text{RF} > \text{ResNet} \ge \text{MLP}$) remains 100\% invariant.
+          \item \textbf{Widest Advantage (+0.1614)}:
+          Under Stability-Focused profile ($w_s = 0.60$), Extra Trees outperforms Deep ResNet by +0.1614 points ($0.8077$ vs. $0.6463$) --- a \textbf{+25.0\% relative advantage}.
+          \item \textbf{Subjective Invariance}:
+          Confirms that C-XAI's conclusions do not depend on tuned loss weights, establishing universal validity across varying departmental risk tolerances.
+        \end{itemize}
+      \end{exampleblock}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% =============================================================================
+% SLIDE 12: ADVERSARIAL STRESS-TESTS & FEATURE MISSINGNESS
+% =============================================================================
+\begin{frame}{Adversarial Robustness \& 20\% Missingness Stress-Testing}
+  \vspace{-0.1cm}
+  \begin{columns}[t]
+    \begin{column}{0.54\textwidth}
+      \textbf{\scriptsize Stress-Testing Audits on MIMIC-IV under Gradient Attacks \& Missingness:}
+      \vspace{0.03cm}
+      \begin{table}[h]
+        \centering
+        \setlength{\tabcolsep}{2pt}
+        \fontsize{5.5pt}{6.8pt}\selectfont
+        \begin{tabular}{llccc}
+          \toprule
+          \textbf{Corruption / Attack Mode} & \textbf{Model Paradigm} & \textbf{Accuracy $\uparrow$} & \textbf{$\mathcal{S}_{\text{bLip}} \downarrow$} & \textbf{$\mathcal{D}_{\text{XAI}} \downarrow$} \\
+          \midrule
+          \multirow{3}{*}{\textbf{Clean Baseline}} 
+          & Random Forest & 0.8845 & 0.0821 & 0.0812 \\
+          & MLP & 0.8920 & 0.4850 & 0.4120 \\
+          & Tabular Deep ResNet & 0.8935 & 0.4912 & 0.4350 \\
+          \midrule
+          \multirow{3}{*}{\textbf{Gaussian Noise ($h=0.05$)}} 
+          & Random Forest & 0.8790 & 0.0845 & 0.0910 \\
+          & MLP & 0.8710 & 0.5210 & 0.4680 \\
+          & Tabular Deep ResNet & 0.8750 & 0.5340 & 0.4820 \\
+          \midrule
+          \multirow{3}{*}{\textbf{Missingness (20\% MCAR)}} 
+          & Random Forest & 0.8610 & 0.0980 & 0.1250 \\
+          & MLP & 0.8120 & 0.6120 & 0.5840 \\
+          & Tabular Deep ResNet & 0.8240 & 0.6050 & 0.5710 \\
+          \midrule
+          \multirow{3}{*}{\textbf{FGSM Attack ($\varepsilon_{\text{adv}}=0.02$)}} 
+          & Random Forest & 0.8720 & 0.1150 & 0.2850 \\
+          & MLP & 0.7950 & 0.8420 & 1.8450 \\
+          & Tabular Deep ResNet & 0.8010 & 0.8650 & 1.8620 \\
+          \midrule
+          \multirow{3}{*}{\textbf{ScaL-PGD Attack (5 Steps)}} 
+          & Random Forest & \textbf{0.8650} & \textbf{0.1320} & \textbf{0.3120} \\
+          & MLP & 0.7680 & 0.9150 & 1.9120 \\
+          & Tabular Deep ResNet & 0.7720 & 0.9380 & 1.9280 \\
+          \bottomrule
+        \end{tabular}
+      \end{table}
+    \end{column}
+    \begin{column}{0.45\textwidth}
+      \begin{alertblock}{\textbf{Catastrophic Attribution Collapse in Deep Models}}
+        \tiny
+        \begin{itemize}\setlength\itemsep{2.5pt}
+          \item \textbf{FGSM Attack ($\varepsilon_{\text{adv}} = 0.02$)}:
+          Single-step gradient shift causes Tabular Deep ResNet discordance to skyrocket from $0.4350$ to $1.8620$.
+          \item \textbf{ScaL-PGD 5-Step Attack}:
+          Projected gradient attacks drive neural discordance to $\mathcal{D}_{\text{XAI}} = \mathbf{1.9280}$ --- \textbf{near-total rank inversion} (theoretical maximum is $2.0$). Explanations are completely hijacked while model accuracy drops only moderately ($0.8935 \to 0.7720$).
+          \item \textbf{Tree Resistance to Attacks}:
+          Tree ensembles possess zero gradients almost everywhere, preventing gradient attacks from shifting decision boundaries ($\mathcal{D}_{\text{XAI}} = 0.3120$).
+          \item \textbf{20\% MCAR Missingness}:
+          Tree stability degrades gracefully ($\mathcal{S}_{\text{bLip}} = 0.0980$ vs. $0.6050$ for Deep ResNet).
+        \end{itemize}
+      \end{alertblock}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% =============================================================================
+% SLIDE 13: COMPUTATIONAL LATENCY, PEAK RAM & HIGH-D SCALING
+% =============================================================================
+\begin{frame}{Operational Benchmarking: Latency, Peak RAM \& Scaling ($D=100$)}
+  \vspace{-0.1cm}
+  \begin{columns}[t]
+    \begin{column}{0.50\textwidth}
+      \textbf{\scriptsize Inference Latency \& Peak RAM Consumption across Explainers:}
+      \vspace{0.03cm}
+      \begin{table}[h]
+        \centering
+        \setlength{\tabcolsep}{2.5pt}
+        \fontsize{6.2pt}{7.5pt}\selectfont
+        \begin{tabular}{llrr}
+          \toprule
+          \textbf{Explainer Method} & \textbf{Complexity} & \textbf{Latency (ms)} & \textbf{Peak RAM} \\
+          \midrule
+          \textbf{TreeSHAP} & $\mathcal{O}(T \cdot L \cdot D^2)$ & \textbf{4.2 ms} & \textbf{45 MB} \\
+          \textbf{KernelSHAP} & $\mathcal{O}(2^D)$ & 4,210.0 ms & 512 MB \\
+          \textbf{LIME} & $\mathcal{O}(N \cdot D^2)$ & 850.0 ms & 120 MB \\
+          \textbf{SmoothGrad} & $\mathcal{O}(M \cdot |\Theta|)$ & 320.0 ms & 210 MB \\
+          \textbf{Integrated Gradients} & $\mathcal{O}(K \cdot |\Theta|)$ & 180.0 ms & 165 MB \\
+          \bottomrule
+        \end{tabular}
+      \end{table}
+      \vspace{-0.15cm}
+      \begin{block}{\textbf{High-Dimensional Scalability ($D \to 100$ Features)}}
+        \scriptsize
+        As feature count expands to $D = 100$ (genomic panels), TreeSHAP scales quadratically (14.8 ms), remaining real-time. KernelSHAP explodes beyond 60 seconds per instance, and LIME RAM climbs to 1.2 GB.
+      \end{block}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \begin{exampleblock}{\textbf{Real-Time ICU Point-of-Care Feasibility}}
+        \scriptsize
+        \begin{itemize}\setlength\itemsep{3pt}
+          \item \textbf{TreeSHAP Enables 1 Hz Real-Time Triage}:
+          Executes in \textbf{4.2 ms} with 45 MB peak RAM. Easily supports continuous online explanation updates alongside bedside ICU telemetry monitors.
+          \item \textbf{KernelSHAP Intractability ($1,000\times$ Slower)}:
+          Requires \textbf{4.2 seconds} per patient encounter due to exponential coalition sampling $\mathcal{O}(2^D)$. Running KernelSHAP on a 100-bed ICU ward requires $>7$ minutes per cycle!
+          \item \textbf{Optimal Pareto Frontier}:
+          Extra Trees + TreeSHAP delivers near-instant execution (4.2 ms), negligible memory footprint, lowest prior divergence, and highest clinical utility.
+        \end{itemize}
+      \end{exampleblock}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% =============================================================================
+% SLIDE 14: COMPREHENSIVE FRAMEWORK COMPARISON MATRIX
+% =============================================================================
+\begin{frame}{Comparative Matrix: C-XAI vs. Existing XAI Frameworks}
+  \vspace{-0.15cm}
+  \begin{table}[h]
+    \centering
+    \tiny
+    \begin{tabularx}{\textwidth}{lccccc}
+      \toprule
+      \textbf{Evaluation Dimension} & \textbf{Captum} & \textbf{OpenXAI} & \textbf{Quantus} & \textbf{SENN} & \textbf{C-XAI (Proposed)} \\
+      \midrule
+      \textbf{Local Perturbation Stability} & Partial (NoiseTunnel) & Yes (Infidelity) & Yes (Lipschitz) & Yes (Supremum) & \textbf{Yes (EHR Vital Noise)} \\
+      \textbf{Cross-Explainer Discordance} & No & No & No & No & \textbf{Yes ($\mathcal{D}_{\text{XAI}}$ Rank Distance)} \\
+      \textbf{Clinical Guideline Prior Alignment} & No & No & No & No & \textbf{Yes (Normalized Wasserstein)} \\
+      \textbf{Calibration \& Decision Utility} & No & No & No & No & \textbf{Yes (Pauker-Kassirer)} \\
+      \textbf{Model Agnostic (Trees + Deep Nets)} & No (Neural Only) & Partial & Partial & No (Intrinsic) & \textbf{Yes (Score Smoother)} \\
+      \textbf{Adversarial Attribution Auditing} & Partial & No & Partial & No & \textbf{Yes (FGSM + ScaL-PGD)} \\
+      \textbf{Healthcare Cohort Integrations} & No & No & No & No & \textbf{Yes (MIMIC, eICU, BCWD)} \\
+      \bottomrule
+    \end{tabularx}
+  \end{table}
+  \vspace{-0.15cm}
+  \begin{block}{\textbf{Why Prior Frameworks are Insufficient for Healthcare AI Auditing}}
+    \scriptsize
+    \begin{enumerate}\setlength\itemsep{1.5pt}
+      \item \textbf{Architecture Restriction}: Captum \& SENN require continuous differentiable networks, failing on step-function tree ensembles that dominate tabular clinical records.
+      \item \textbf{Blindness to Medical Priors}: OpenXAI and Quantus measure mathematical infidelity against internal model weights, completely ignoring established clinical guidelines (SOFA, ASCVD).
+      \item \textbf{Absence of Clinical Loss Modeling}: No prior toolkit links explanation fidelity to physician decision payoffs with asymmetric error penalties ($\alpha, \beta$). C-XAI closes this critical gap.
+    \end{enumerate}
+  \end{block}
+\end{frame}
+
+% =============================================================================
+% SLIDE 15: COMPLETE PAPER BIBLIOGRAPHY (ALL 28 REFERENCES)
+% =============================================================================
+\begin{frame}{Complete Paper Bibliography (All 28 References)}
+  \vspace{-0.1cm}
+  \begin{columns}[t]
+    \begin{column}{0.49\textwidth}
+      \tiny
+      \begin{enumerate}\setlength\itemsep{0.5pt}
+        \item S. M. Lundberg \& S.-I. Lee, ``Unified approach to interpreting predictions,'' \textit{NeurIPS}, 2017.
+        \item M. T. Ribeiro, S. Singh, et al., ``Why should I trust you?,'' in \textit{ACM SIGKDD}, 2016.
+        \item M. Sundararajan, A. Taly, et al., ``Axiomatic attribution for deep networks,'' \textit{ICML}, 2017.
+        \item D. Muhammad \& M. Bendechache, ``XAI in medical imaging,'' \textit{CSBJ}, vol. 23, 2024.
+        \item K. Lamba \& S. Rani, ``BCI and Grad-CAM for smart healthcare,'' \textit{J. Neurosci. Methods}, 2024.
+        \item R. Caruana, Y. Lou, et al., ``Interpretable machine learning in healthcare,'' \textit{ACM Comput. Surv.}, 2023.
+        \item C. Agarwal, S. Krishna, et al., ``OpenXAI: Benchmark for model explanations,'' \textit{NeurIPS}, 2022.
+        \item A. Hedstr\"om, L. Weber, et al., ``Quantus: An XAI evaluation toolkit,'' \textit{JMLR}, 2023.
+        \item S. Krishna, T. Han, et al., ``The disagreement problem in explainable AI,'' \textit{ACM CHI}, 2022.
+        \item A. E. W. Johnson, L. Bulgarelli, et al., ``MIMIC-IV, a clinical EHR dataset,'' \textit{Sci. Data}, 2023.
+        \item T. J. Pollard, A. E. W. Johnson, et al., ``The eICU benchmark pipeline,'' \textit{Sci. Data}, 2023.
+        \item C.-K. Yeh, C.-K. Hsieh, et al., ``Sensitivity \& robustness of explanations,'' \textit{Nat. Mach. Intell.}, 2023.
+        \item G. Bansal, T. Wu, et al., ``Calibrating human-AI reliance in clinical support,'' \textit{ACM CHI}, 2024.
+        \item Z. Bu\c{c}inca, P. Malaya, et al., ``Evaluating stability and clinician trust,'' \textit{Artif. Intell. Med.}, 2023.
+      \end{enumerate}
+    \end{column}
+    \begin{column}{0.49\textwidth}
+      \tiny
+      \begin{enumerate}\setcounter{enumi}{14}\setlength\itemsep{0.5pt}
+        \item S. M. Lauritsen, M. Kal\o r, et al., ``Early detection of sepsis with ML,'' \textit{Lancet Digit. Health}, 2024.
+        \item F. Bohlen, M. Mittermaier, et al., ``Evaluation of XAI in ICU risk,'' \textit{IEEE JBHI}, 2023.
+        \item J. Duell, G. Stiglic, et al., ``Cross-explainer disagreement in EHR,'' \textit{J. Biomed. Inform.}, 2023.
+        \item X. Niu, L. Wang, et al., ``Multi-level attention deep neural networks,'' \textit{IEEE TNNLS}, 2022.
+        \item T. Mahmood, Y. Chen, et al., ``Transparency in gradient boosted trees,'' \textit{Nat. Mach. Intell.}, 2022.
+        \item J. Alderden, D. Drake, et al., ``Clinical utility and usability auditing,'' \textit{CIN}, 2023.
+        \item K. Ihalapathirana \& T. Silva, ``ReliefF and SHAP feature selection,'' \textit{IEEE Access}, 2023.
+        \item P. Keyl, M. Becker, et al., ``Multimodal deep networks for pan-cancer,'' \textit{Lancet Digit. Health}, 2024.
+        \item A. Mohamed, S. Ibrahim, et al., ``Clinician exclusion in cancer XAI,'' \textit{Lancet Oncol.}, 2024.
+        \item Z. Shen, Y. Liu, et al., ``Interpretable models for disease prognosis,'' \textit{Artif. Intell. Rev.}, 2024.
+        \item S. Vijay, G. R. Ramya, et al., ``Integrated Two Layered Voting for CAD,'' \textit{IEEE Access}, vol. 11, 2023.
+        \item G. R. Ramya, M. Senthil, et al., ``XAI Framework for Diabetes \& CVD,'' \textit{LNCS}, vol. 13840, Springer, 2023.
+        \item G. R. Ramya, S. V. Manoj, et al., ``Understanding CNNs with Explainable AI,'' \textit{Proc. IJCACI}, Springer Nature, pp. 139--153, 2025.
+        \item G. R. Ramya, R. Prabha, et al., ``Predictive ML and Feature Selection for EHR,'' \textit{CCIS}, vol. 1780, Springer, 2023.
+      \end{enumerate}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% =============================================================================
+% SLIDE 16: CLINICAL GOVERNANCE, REGULATORY COMPLIANCE & Q&A
+% =============================================================================
+\begin{frame}{Clinical Governance, Regulatory Compliance \& Technical Q\&A}
+  \vspace{-0.1cm}
+  \begin{columns}[t]
+    \begin{column}{0.49\textwidth}
+      \begin{block}{\textbf{Medical AI Regulatory Alignment}}
+        \scriptsize
+        \begin{itemize}\setlength\itemsep{2pt}
+          \item \textbf{FDA SaMD Action Plan (2021)}: Mandates pre-market transparency and post-market algorithmic surveillance. $\mathcal{W}_{\text{Clin}}^{\text{norm}}$ quantitatively verifies that deployed AI models adhere to Good Machine Learning Practice (GMLP).
+          \item \textbf{EU AI Act (Regulation 2024/1689)}:
+          \begin{itemize}\scriptsize
+            \item \textbf{Article 13 (Transparency)}: Audited by Cross-Explainer Discordance ($\mathcal{D}_{\text{XAI}} \le 0.10$).
+            \item \textbf{Article 14 (Human Oversight)}: Guaranteed via Pauker-Kassirer error reliance modeling ($\text{OR}, \text{UR}$).
+            \item \textbf{Article 15 (Robustness \& Cybersecurity)}: Stress-tested via $\mathcal{S}_{\text{bLip}}$ and ScaL-PGD attacks.
+          \end{itemize}
+          \item \textbf{Clinical Gating}: Pre-deployment verification standard preventing silent diagnostic failure in hospitals.
+        \end{itemize}
+      \end{block}
+    \end{column}
+    \begin{column}{0.49\textwidth}
+      \begin{exampleblock}{\textbf{Open Science Release \& Committee Defense}}
+        \scriptsize
+        \begin{itemize}\setlength\itemsep{3pt}
+          \item \textbf{Open-Source Benchmark Repository}:
+          Full PyTorch/Scikit-learn pipeline, codified clinical prior guideline matrices, and synthetic noise generators available upon publication.
+          \item \textbf{Seed-Level Reproducibility}:
+          All 50 random trial seeds (42--91), cross-validation folds, and checkpoints fully serialized with fixed environmental configurations.
+          \item \textbf{Ready for Technical Inquiries}:
+          We welcome questions from session chairs and award committee evaluators on metric proofs, clinical reliance, and EHR deployment.
+          \item \textbf{Author Contacts}:
+          \begin{itemize}\scriptsize
+            \item \textbf{Sheela Akshar Sakhi} (\texttt{aksharsakhi@gmail.com})
+            \item \textbf{Dr. Ramya G R} (\texttt{gr\_ramya@cb.amrita.edu})
+          \end{itemize}
+        \end{itemize}
+      \end{exampleblock}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\end{document}

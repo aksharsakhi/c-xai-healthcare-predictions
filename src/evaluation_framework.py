@@ -66,9 +66,11 @@ def compute_clinical_wasserstein_distance(model_importance, feature_names, clini
         prior_vec.append(p_weight)
         model_vec.append(abs(imp_dict.get(f, 0.0)) / tot_model)
         
-    w_dist = wasserstein_distance(prior_vec, model_vec)
-    alignment_score = max(0.0, 1.0 - w_dist)
-    return w_dist, alignment_score
+    w_dist = float(wasserstein_distance(prior_vec, model_vec))
+    d_feat = len(clinical_priors)
+    w_norm = float(w_dist / max(1, (d_feat - 1))) if d_feat > 1 else float(w_dist)
+    alignment_score = float(max(0.0, 1.0 - w_norm))
+    return w_norm, alignment_score
 
 def compute_expected_calibration_error(y_true, y_prob, n_bins=10):
     """

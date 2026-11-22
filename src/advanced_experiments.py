@@ -11,8 +11,11 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, roc_auc_score
 from scipy.stats import spearmanr, wasserstein_distance
 import shap
-import lime
-import lime.lime_tabular
+try:
+    import lime
+    import lime.lime_tabular
+except ImportError:
+    lime = None
 import warnings
 warnings.filterwarnings('ignore')
 
