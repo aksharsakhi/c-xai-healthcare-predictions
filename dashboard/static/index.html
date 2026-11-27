@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>C-XAI Live Clinical Auditing Dashboard · ICMLDE 2026 (Paper 857)</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+  <script src="/static/plotly.min.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <div class="brand-meta">ICMLDE 2026 · Elsevier Procedia Computer Science · Paper ID: 857</div>
+      <h1 class="brand-title">C-XAI: Live Clinical Explanation Stability & Decision Utility Console</h1>
+      <div class="brand-sub" id="cohort-subtitle">Loading active healthcare cohort and real-time auditing models...</div>
+    </div>
+    <div class="topbar-controls">
+      <div class="control-group">
+        <label for="cohort-select">Active Healthcare Cohort</label>
+        <select id="cohort-select"></select>
+      </div>
+      <button class="btn btn-outline" id="btn-rebuild" title="Re-train & re-run real cohort audit from scratch">Re-Run Live Audit</button>
+      <span class="status-pill" id="engine-status">Real-Time Engine Ready</span>
+    </div>
+  </header>
+
+  <nav class="nav-tabs" role="tablist">
+    <button class="tab-btn active" data-tab="tab-overview">1. Benchmark & Decoupling</button>
+    <button class="tab-btn" data-tab="tab-patient">2. Live Patient Explainer & Noise Lab</button>
+    <button class="tab-btn" data-tab="tab-attacks">3. Noise Scaling & Adversarial Attacks</button>
+    <button class="tab-btn" data-tab="tab-utility">4. Utility, Calibration & Ablation</button>
+    <button class="tab-btn" data-tab="tab-fairness">5. Fairness & Regulatory Gate</button>
+    <button class="tab-btn" data-tab="tab-paper">6. ICMLDE Paper Archive (N=50 Trials)</button>
+  </nav>
+
+  <main class="container">
+    <!-- TAB 1: OVERVIEW -->
+    <section id="tab-overview" class="tab-panel active">
+      <div class="kpi-grid" id="kpi-cards"></div>
+
+      <div class="stat-banner" id="stats-banner">
+        Running paired statistical tests (Wilcoxon signed-rank, paired t-test, Cohen's d)...
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Predictive Accuracy vs. Calibrated Clinical Utility</h2>
+            <span class="card-sub">Real cohort test-split audit</span>
+          </div>
+          <div id="chart-acc-util" class="plot-box"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Accuracy–Explainability Decoupling (AUROC vs. U<sub>Clin</sub>)</h2>
+            <span class="card-sub" id="decoupling-r2">OLS Regression R²</span>
+          </div>
+          <div id="chart-decoupling" class="plot-box"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Live Model Auditing Leaderboard (Real Execution Metrics)</h2>
+          <span class="card-sub">Lower S<sub>Lip</sub>, D<sub>XAI</sub>, W<sub>Clin</sub><sup>norm</sup>, ECE is better · Higher T<sub>Clin</sub>, U<sub>Clin</sub> is better</span>
+        </div>
+        <div style="overflow-x:auto;">
+          <table id="leaderboard-table"></table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: LIVE PATIENT EXPLAINER & NOISE LAB -->
+    <section id="tab-patient" class="tab-panel">
+      <div class="grid-sidebar">
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Patient Encounter & Sensor Noise</h2>
+            <span class="card-sub" id="patient-label-badge">Test Sample</span>
+          </div>
+          <div class="toolbar">
+            <div class="control-group" style="flex:1;">
+              <label for="sample-idx">Test Patient Index</label>
+              <input type="number" id="sample-idx" value="0" min="0" />
+            </div>
+            <button class="btn btn-primary" id="btn-load-sample">Load Patient</button>
+          </div>
+
+          <div class="slider-item" style="margin-bottom: 10px; border-color: #93C5FD; background:#EFF6FF;">
+            <div class="slider-top">
+              <span>Physiological Noise Radius (h)</span>
+              <span class="val" id="noise-h-val">0.05</span>
+            </div>
+            <input type="range" id="noise-h-slider" min="0.00" max="0.20" step="0.01" value="0.05" />
+            <div class="slider-top" style="margin-top:6px;">
+              <span>Monte Carlo Draws (M)</span>
+              <span class="val" id="mc-samples-val">12</span>
+            </div>
+            <input type="range" id="mc-samples-slider" min="4" max="24" step="2" value="12" />
+          </div>
+
+          <div class="slider-list" id="feature-sliders"></div>
+
+          <div style="margin-top: 12px; display:flex; gap:8px;">
+            <button class="btn btn-teal" style="flex:1;" id="btn-run-explain">Run Live Multi-Explainer Audit</button>
+          </div>
+        </div>
+
+        <div>
+          <div class="kpi-grid" id="patient-kpis"></div>
+
+          <div class="card">
+            <div class="card-header">
+              <h2 class="card-title">Clean vs. Noisy (x + δ) Feature Attributions: Extra Trees vs. Tabular Deep ResNet</h2>
+              <div class="toolbar" style="margin:0;">
+                <select id="explainer-choice">
+                  <option value="primary">TreeSHAP / Integrated Gradients (Primary)</option>
+                  <option value="LIME Surrogate">LIME Local Linear Surrogate</option>
+                  <option value="Integrated Gradients">Integrated Gradients (Zeroth-Order vs. Autograd)</option>
+                  <option value="smoothgrad">SmoothGrad / Zeroth-Order Smoother</option>
+                  <option value="Local PFI">Local Feature Ablation (PFI)</option>
+                </select>
+              </div>
+            </div>
+            <div id="chart-patient-attr" class="plot-box"></div>
+          </div>
+
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-header">
+                <h2 class="card-title">Extra Trees Discordance Matrix (D<sub>XAI</sub> = 1 − r<sub>s</sub>)</h2>
+                <span class="card-sub" id="et-dxai-sub">Live patient consensus</span>
+              </div>
+              <div id="chart-dxai-et" class="plot-box" style="min-height:300px;"></div>
+            </div>
+            <div class="card">
+              <div class="card-header">
+                <h2 class="card-title">Tabular Deep ResNet Discordance Matrix (D<sub>XAI</sub>)</h2>
+                <span class="card-sub" id="resnet-dxai-sub">Live patient conflict</span>
+              </div>
+              <div id="chart-dxai-resnet" class="plot-box" style="min-height:300px;"></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h2 class="card-title">Clinical Guideline Prior Alignment (1D Wasserstein W<sub>Clin</sub><sup>norm</sup>)</h2>
+              <span class="card-sub" id="guideline-label">Codified Medical Priors vs. Learned Importance</span>
+            </div>
+            <div id="chart-prior-align" class="plot-box" style="min-height:290px;"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: NOISE SCALING & ADVERSARIAL ATTACKS -->
+    <section id="tab-attacks" class="tab-panel">
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Live Perturbation Scaling (S<sub>Lip</sub> vs. Noise Radius h)</h2>
+            <span class="card-sub">Sub-linear tree partitioning vs. supra-linear neural manifolds</span>
+          </div>
+          <div id="chart-h-scaling" class="plot-box"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Live Adversarial & Missingness Stress-Test Runner</h2>
+            <span class="card-sub">Real PyTorch autograd attacks & MCAR masking</span>
+          </div>
+          <div class="toolbar">
+            <div class="control-group">
+              <label for="attack-mode">Perturbation / Attack Mode</label>
+              <select id="attack-mode">
+                <option value="fgsm">FGSM Attribution Attack (Single-Step Gradient)</option>
+                <option value="scal_pgd">ScaL-PGD Attribution Attack (5-Step PGD)</option>
+                <option value="mcar_20">20% MCAR Missingness Corruption</option>
+                <option value="gaussian">Gaussian Telemetry Noise (h = ε)</option>
+                <option value="clean">Clean Baseline</option>
+              </select>
+            </div>
+            <div class="control-group">
+              <label for="attack-eps">Perturbation Budget (ε)</label>
+              <input type="number" id="attack-eps" value="0.05" min="0.01" max="0.20" step="0.01" style="width:95px;" />
+            </div>
+            <button class="btn btn-danger" id="btn-run-attack">Execute Live Stress-Test</button>
+          </div>
+          <div id="chart-attack-results" class="plot-box" style="min-height:280px;"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Attack Impact Breakdown & Top-3 Clinical Driver Shift</h2>
+          <span class="card-sub">Demonstrates rank inversion under identical prediction preservation</span>
+        </div>
+        <div style="overflow-x:auto;">
+          <table id="attack-table"></table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: UTILITY, CALIBRATION & ABLATION -->
+    <section id="tab-utility" class="tab-panel">
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Probability Reliability Calibration Diagram (10-Bin ECE)</h2>
+            <span class="card-sub">Diagonal y = x represents perfect clinical calibration</span>
+          </div>
+          <div id="chart-calibration" class="plot-box"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Pauker–Kassirer Reliance & Trust Weight Simulator</h2>
+            <span class="card-sub">Real-time evaluation of T<sub>Clin</sub> and Net Utility U<sub>Clin</sub></span>
+          </div>
+          <div class="grid-2" style="margin-bottom:10px;">
+            <div class="slider-item">
+              <div class="slider-top"><span>Over-Reliance Penalty (α)</span><span class="val" id="sim-alpha-v">0.50</span></div>
+              <input type="range" id="sim-alpha" min="0.10" max="0.90" step="0.05" value="0.50" />
+              <div class="slider-top" style="margin-top:6px;"><span>Under-Reliance Penalty (β)</span><span class="val" id="sim-beta-v">0.30</span></div>
+              <input type="range" id="sim-beta" min="0.05" max="0.80" step="0.05" value="0.30" />
+            </div>
+            <div class="slider-item">
+              <div class="slider-top"><span>Stability Weight (w<sub>s</sub>)</span><span class="val" id="sim-ws-v">0.33</span></div>
+              <input type="range" id="sim-ws" min="0.0" max="1.0" step="0.05" value="0.333" />
+              <div class="slider-top" style="margin-top:4px;"><span>Prior Weight (w<sub>a</sub>)</span><span class="val" id="sim-wa-v">0.33</span></div>
+              <input type="range" id="sim-wa" min="0.0" max="1.0" step="0.05" value="0.333" />
+              <div class="slider-top" style="margin-top:4px;"><span>Calibration Weight (w<sub>c</sub>)</span><span class="val" id="sim-wc-v">0.34</span></div>
+              <input type="range" id="sim-wc" min="0.0" max="1.0" step="0.05" value="0.334" />
+            </div>
+          </div>
+          <div id="chart-utility-sim" class="plot-box" style="min-height:250px;"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Live Decision Utility & Metric Component Ablation Breakdown</h2>
+          <span class="card-sub">Marginal impact on Trust Calibration Factor when removing Stability, Alignment, or Calibration</span>
+        </div>
+        <div style="overflow-x:auto;">
+          <table id="utility-sim-table"></table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 5: FAIRNESS & REGULATORY GATE -->
+    <section id="tab-fairness" class="tab-panel">
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Demographic Subgroup Stability Audit</h2>
+            <span class="card-sub">Disaggregated S<sub>Lip</sub> below vs. above cohort median</span>
+          </div>
+          <div id="chart-fairness" class="plot-box"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">FDA SaMD & EU AI Act Pre-Deployment Audit Gate</h2>
+            <span class="card-sub">Articles 13 & 14 Transparency & Human Oversight Verification</span>
+          </div>
+          <div class="toolbar">
+            <div class="control-group">
+              <label for="gate-slip">Max Allowed S<sub>Lip</sub></label>
+              <input type="number" id="gate-slip" value="0.18" step="0.02" min="0.05" max="0.80" style="width:90px;" />
+            </div>
+            <div class="control-group">
+              <label for="gate-dxai">Max Allowed D<sub>XAI</sub></label>
+              <input type="number" id="gate-dxai" value="0.48" step="0.02" min="0.05" max="1.00" style="width:90px;" />
+            </div>
+            <div class="control-group">
+              <label for="gate-ece">Max Allowed ECE</label>
+              <input type="number" id="gate-ece" value="0.10" step="0.01" min="0.01" max="0.30" style="width:90px;" />
+            </div>
+            <button class="btn btn-primary" id="btn-eval-gate">Evaluate Audit Gate</button>
+          </div>
+          <div style="overflow-x:auto;">
+            <table id="regulatory-table"></table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 6: ICMLDE PAPER ARCHIVE -->
+    <section id="tab-paper" class="tab-panel">
+      <div class="stat-banner">
+        Exact benchmark results published in <strong>ICMLDE 2026 Paper ID: 857</strong> (<em>Elsevier Procedia Computer Science</em>) across <strong>51,369 clinical encounters</strong> and <strong>N = 50 stratified cross-validation trials</strong> (seeds 42–91).
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Table 1 (Paper): Overall Benchmark Across 4 Healthcare Cohorts (N = 50 Trials)</h2>
+          <span class="card-sub">Extra Trees delivers +19.6% relative clinical utility gain on MIMIC-IV (p &lt; 0.001, W = 0.0, d = 2.96)</span>
+        </div>
+        <div style="overflow-x:auto;">
+          <table id="paper-overall-table"></table>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Table 2 (Paper): Stability Scaling Across h ∈ [0.01, 0.20]</h2>
+          </div>
+          <div style="overflow-x:auto;"><table id="paper-h-table"></table></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Table 3 (Paper): Trust Weight Sensitivity (MIMIC-IV)</h2>
+          </div>
+          <div style="overflow-x:auto;"><table id="paper-weight-table"></table></div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Table 4 (Paper): Adversarial & MCAR Robustness (MIMIC-IV)</h2>
+          </div>
+          <div style="overflow-x:auto;"><table id="paper-adv-table"></table></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Table 5 (Paper): Computational Complexity, Latency & RAM</h2>
+          </div>
+          <div style="overflow-x:auto;"><table id="paper-latency-table"></table></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer-note">
+    C-XAI v1.0.0 · Department of Computer Science & Engineering, Amrita School of Computing, Amrita Vishwa Vidyapeetham · Real-Time Execution Backend (Scikit-Learn · PyTorch · SHAP · SciPy)
+  </footer>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
