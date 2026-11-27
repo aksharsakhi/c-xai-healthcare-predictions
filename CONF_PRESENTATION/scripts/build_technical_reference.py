@@ -282,6 +282,34 @@ def generate_markdown():
             lines.append(f"> **{html_to_markdown(topic)}**: {html_to_markdown(explanation)}\n")
         lines.append("---\n")
 
+    lines.append("---\n")
+    lines.append("## Appendix: Quick-Lookup Glossary of Symbols, Acronyms & Specialized Terms\n")
+    lines.append("| Symbol / Term | Domain | Meaning |")
+    lines.append("|:---|:---|:---|")
+    glossary_rows = [
+        ("Ŝ<sub>Lip</sub>", "Stability Metric", "Empirical Local Lipschitz Stability Index measuring attribution sensitivity under Gaussian noise (h = 0.05, M = 100). Lower is more stable."),
+        ("D<sub>XAI</sub>", "Discordance Metric", "Cross-Explainer Discordance (1 − r<sub>s</sub>) ∈ [0, 2]; measures rank-order conflict between pairs of post-hoc explainers. Lower is better."),
+        ("W<sub>Clin</sub><sup>norm</sup> / A<sub>Clin</sub>", "Clinical Alignment", "Dimension-normalized 1D Wasserstein distance to medical priors ∈ [0, 1]; Alignment A<sub>Clin</sub> = 1 − W<sub>Clin</sub><sup>norm</sup>."),
+        ("T<sub>Clin</sub> / Û<sub>Clin</sub>", "Decision Utility", "Clinician Trust Calibration Factor T<sub>Clin</sub> and Net Calibrated Decision Utility Û<sub>Clin</sub> incorporating accuracy and reliance loss."),
+        ("ECE / Brier Score", "Calibration", "Expected Calibration Error and mean squared probability error measuring how faithfully predicted probabilities match true risk."),
+        ("OR / UR (α = 0.50, β = 0.30)", "Decision Theory", "Over-Reliance (accepting false predictions; penalty α = 0.50) and Under-Reliance (ignoring true alerts; penalty β = 0.30)."),
+        ("r<sub>s</sub>", "Statistics", "Spearman rank correlation coefficient ∈ [−1, +1] measuring ordinal rank consistency between two attribution vectors."),
+        ("W = 0.0 / t = 14.82 / d = 2.96", "Hypothesis Testing", "Wilcoxon signed-rank statistic (0.0 = 50/50 wins), paired t-statistic, and Cohen's d standardized effect size (> 0.8 = large)."),
+        ("SOFA / Sepsis-3", "Clinical ICU", "Sequential Organ Failure Assessment (0–24) and international consensus criteria defining acute sepsis organ dysfunction."),
+        ("MAP / Lactate / WBC / Creatinine", "Clinical Biomarkers", "Mean Arterial Pressure (perfusion), Serum Lactate (hypoxia), White Blood Cell count (inflammation), Creatinine (kidney injury)."),
+        ("NPI / ASCVD", "Clinical Oncology / Cardio", "Nottingham Prognostic Index (breast pathology) and ACC/AHA 10-year Atherosclerotic Cardiovascular Disease risk score."),
+        ("MCAR", "Missing Data", "Missing Completely At Random: missingness independent of observed or unobserved patient clinical states (20% stress-test)."),
+        ("TreeSHAP / KernelSHAP / LIME", "XAI Explainers", "Game-theoretic Shapley attribution methods (tree-exact vs. kernel-approximated) and local sparse linear surrogate explainer."),
+        ("IG / SmoothGrad / PFI", "XAI Explainers", "Integrated Gradients (path integral from survivor median), SmoothGrad (noisy gradient averaging), Permutation Feature Importance."),
+        ("Zeroth-Order Smoother", "Optimization", "Gaussian convolution + Stein's lemma score estimator enabling gradient attribution on discontinuous decision-tree step functions."),
+        ("FGSM / ScaL-PGD", "Adversarial ML", "Fast Gradient Sign Method and Scaled Projected Gradient Descent attacks perturbing attributions while preserving predictions."),
+        ("SENN / Captum / OpenXAI / Quantus", "Prior Benchmarks", "Self-Explaining Neural Networks and existing vision/NLP/synthetic XAI evaluation toolkits lacking clinical guideline utility models."),
+        ("FDA SaMD / GMLP / EU AI Act", "Governance", "Software as a Medical Device, Good Machine Learning Practice Principle 7, and EU AI Act Articles 13 (transparency) & 14 (human oversight).")
+    ]
+    for sym, dom, desc in glossary_rows:
+        lines.append(f"| **{sym}** | {dom} | {desc} |")
+    lines.append("")
+
     with open(MD_PATH, "w", encoding="utf-8") as f:
         f.write("\n".join(lines))
     print(f"Markdown written: {MD_PATH}")
@@ -525,6 +553,69 @@ def generate_docx():
             r.font.color.rgb = COLOR_SECONDARY
 
         add_rationale_box(doc, s["rationales"])
+
+    # Appendix: Quick-Lookup Glossary Table
+    h_app = doc.add_heading("Appendix: Quick-Lookup Glossary of Symbols, Acronyms & Specialized Terms", level=1)
+    h_app.paragraph_format.space_before = Pt(12)
+    h_app.paragraph_format.space_after = Pt(4)
+    h_app.paragraph_format.keep_with_next = True
+    add_bottom_border(h_app, hex_color=HEX_RULE, sz="6")
+    for r in h_app.runs:
+        r.font.name = "Arial"
+        r.font.size = Pt(12.0)
+        r.font.bold = True
+        r.font.color.rgb = COLOR_PRIMARY
+
+    glossary_table = [
+        ("Symbol / Term", "Category", "Definition & Technical Meaning"),
+        ("Ŝ<sub>Lip</sub>", "Stability Metric", "Empirical Local Lipschitz Stability Index measuring attribution sensitivity under Gaussian noise (h = 0.05, M = 100). Lower is more stable."),
+        ("D<sub>XAI</sub>", "Discordance Metric", "Cross-Explainer Discordance (1 − r<sub>s</sub>) ∈ [0, 2]; quantifies rank-order conflict across competing post-hoc explainers. Lower is better."),
+        ("W<sub>Clin</sub><sup>norm</sup> / A<sub>Clin</sub>", "Clinical Alignment", "Dimension-normalized 1D Wasserstein distance to medical priors ∈ [0, 1]; Alignment A<sub>Clin</sub> = 1 − W<sub>Clin</sub><sup>norm</sup>."),
+        ("T<sub>Clin</sub> / Û<sub>Clin</sub>", "Decision Utility", "Clinician Trust Calibration Factor T<sub>Clin</sub> and Net Calibrated Clinical Decision Utility Û<sub>Clin</sub> combining accuracy and reliance loss."),
+        ("ECE / Brier Score", "Calibration", "Expected Calibration Error and mean squared probability error measuring how faithfully predicted risks match observed outcomes."),
+        ("OR / UR (α = 0.50, β = 0.30)", "Decision Theory", "Over-Reliance (following false predictions; penalty α = 0.50) and Under-Reliance (dismissing true alerts; penalty β = 0.30)."),
+        ("r<sub>s</sub> / R²", "Statistics", "Spearman rank correlation ∈ [−1, +1] across feature ranks; R² is variance explained in OLS regression (R² = 0.04 decoupling)."),
+        ("W = 0.0 / t = 14.82 / d = 2.96", "Hypothesis Tests", "Wilcoxon signed-rank statistic (0.0 = 50/50 wins), paired t-statistic, and Cohen's d standardized effect size (> 0.8 = large)."),
+        ("SOFA / Sepsis-3", "Clinical ICU", "Sequential Organ Failure Assessment (0–24) and consensus criteria defining acute sepsis organ dysfunction."),
+        ("MAP / Lactate / WBC / Creatinine", "Clinical Biomarkers", "Mean Arterial Pressure (perfusion), Serum Lactate (hypoxia), White Blood Cell count (infection), Creatinine (kidney function)."),
+        ("NPI / ASCVD", "Oncology / Cardio", "Nottingham Prognostic Index (breast pathology) and ACC/AHA 10-year Atherosclerotic Cardiovascular Disease risk score."),
+        ("MCAR", "Missing Data", "Missing Completely At Random: missing values independent of observed or unobserved patient states (20% stress-test)."),
+        ("TreeSHAP / KernelSHAP / LIME", "XAI Explainers", "Game-theoretic Shapley attribution (tree-exact vs. kernel-approximated) and local sparse linear surrogate explainer."),
+        ("IG / SmoothGrad / PFI", "XAI Explainers", "Integrated Gradients (path integral from survivor median), SmoothGrad (noisy gradient averaging), Permutation Feature Importance."),
+        ("Zeroth-Order Smoother", "Optimization", "Gaussian convolution + Stein's lemma score estimator enabling gradient attribution on discontinuous tree step functions."),
+        ("FGSM / ScaL-PGD", "Adversarial ML", "Fast Gradient Sign Method and Scaled Projected Gradient Descent attacks distorting explanations while preserving predictions."),
+        ("SENN / Captum / OpenXAI / Quantus", "Prior Toolkits", "Self-Explaining Neural Networks and existing vision/NLP/synthetic XAI libraries lacking clinical guideline utility models."),
+        ("FDA SaMD / GMLP / EU AI Act", "Governance", "Software as a Medical Device, Good Machine Learning Practice Principle 7, and EU AI Act Articles 13 (transparency) & 14 (oversight).")
+    ]
+
+    g_widths_dxa = [2304, 1584, 6192]  # 1.6 + 1.1 + 4.3 = 7.0 in
+    g_tbl = doc.add_table(rows=len(glossary_table), cols=3)
+    g_tbl.alignment = WD_TABLE_ALIGNMENT.CENTER
+    g_tbl.autofit = False
+    set_table_fixed_width(g_tbl, PRINTABLE_WIDTH_DXA, g_widths_dxa)
+    g_tbl.rows[0]._tr.get_or_add_trPr().append(parse_xml(f'<w:tblHeader {nsdecls("w")}/>'))
+
+    for r_idx, row in enumerate(glossary_table):
+        is_header = (r_idx == 0)
+        for c_idx, val in enumerate(row):
+            cell = g_tbl.cell(r_idx, c_idx)
+            set_cell_margins(cell, top=55, bottom=55, left=85, right=85)
+            if is_header:
+                set_cell_background(cell, HEX_PRIMARY)
+            else:
+                set_cell_background(cell, HEX_ROW_ALT if r_idx % 2 == 1 else "FFFFFF")
+            p = cell.paragraphs[0]
+            p.paragraph_format.space_before = Pt(0)
+            p.paragraph_format.space_after = Pt(0)
+            p.paragraph_format.line_spacing = 1.12
+            if is_header:
+                add_rich_runs(p, val, font_size=Pt(8.3), color=RGBColor(255, 255, 255), bold=True)
+            elif c_idx == 0:
+                add_rich_runs(p, val, font_size=Pt(8.2), color=COLOR_PRIMARY, bold=True)
+            elif c_idx == 1:
+                add_rich_runs(p, val, font_size=Pt(8.2), color=COLOR_TEAL, bold=True)
+            else:
+                add_rich_runs(p, val, font_size=Pt(8.2), color=COLOR_DARK)
 
     doc.save(DOCX_PATH)
     print(f"DOCX written: {DOCX_PATH}")
