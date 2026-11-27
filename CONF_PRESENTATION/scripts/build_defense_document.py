@@ -2,8 +2,20 @@
 """
 build_defense_document.py
 =========================
-Builds the complete slide-by-slide technical reference & defense guide
-in Markdown, DOCX, and PDF formats for ICMLDE 2026 Paper ID: 857.
+Generates the comprehensive, slide-by-slide technical reference and conference defense guide
+for the ICMLDE 2026 oral presentation (Paper ID: 857).
+
+Outputs:
+1. CONF_PRESENTATION/SUBMISSION_READY/ICMLDE-2026-857_Slide_by_Slide_Defense_Guide.md
+2. CONF_PRESENTATION/SUBMISSION_READY/ICMLDE-2026-857_Slide_by_Slide_Defense_Guide.docx
+3. CONF_PRESENTATION/SUBMISSION_READY/ICMLDE-2026-857_Slide_by_Slide_Defense_Guide.pdf
+
+Design & Layout Highlights:
+- Authoritative Elsevier conference / viva defense dossier aesthetic.
+- Running header and footer on every page for publication-grade presentation.
+- cantSplit enabled on all callout rows to prevent question/answer breaks across pages.
+- "🎯 RECOMMENDED DEFENSE (SAY EXACTLY THIS)" badge: clear for presenter, dignified for judges.
+- Formatted mathematical equations in both Markdown and DOCX/PDF.
 """
 
 import os
@@ -11,33 +23,35 @@ import sys
 import subprocess
 import docx
 from docx.shared import Inches, Pt, RGBColor
-from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 from docx.enum.table import WD_TABLE_ALIGNMENT
 from docx.oxml import parse_xml
 from docx.oxml.ns import nsdecls
 
-sys.path.append(os.path.dirname(__file__))
+# Ensure script directory is in Python path to import slide data
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(SCRIPT_DIR)
 from slide_defense_data import SLIDES_DATA
 
-OUTPUT_DIR = "CONF_PRESENTATION/SUBMISSION_READY"
-os.makedirs(OUTPUT_DIR, exist_ok=True)
+OUTPUT_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, "..", "SUBMISSION_READY"))
 MD_PATH = os.path.join(OUTPUT_DIR, "ICMLDE-2026-857_Slide_by_Slide_Defense_Guide.md")
 DOCX_PATH = os.path.join(OUTPUT_DIR, "ICMLDE-2026-857_Slide_by_Slide_Defense_Guide.docx")
 PDF_PATH = os.path.join(OUTPUT_DIR, "ICMLDE-2026-857_Slide_by_Slide_Defense_Guide.pdf")
 
-# Styling Constants
-COLOR_PRIMARY = RGBColor(27, 54, 93)      # #1B365D Deep Navy
-COLOR_SECONDARY = RGBColor(51, 102, 153)  # #336699 Slate Blue
-COLOR_DARK = RGBColor(34, 34, 34)         # #222222 Charcoal
-COLOR_MUTED = RGBColor(89, 89, 89)        # #595959 Grey
-COLOR_GREEN = RGBColor(30, 126, 52)       # #1E7E34 Emerald
-COLOR_AMBER = RGBColor(180, 83, 9)        # #B45309 Warm Amber
+# Palette Constants
+COLOR_PRIMARY = RGBColor(27, 54, 93)     # Deep Navy (#1B365D)
+COLOR_SECONDARY = RGBColor(51, 102, 153) # Slate Blue (#336699)
+COLOR_ACCENT = RGBColor(0, 128, 128)     # Deep Teal (#008080)
+COLOR_AMBER = RGBColor(184, 107, 0)      # Bronze Amber (#B86B00)
+COLOR_DARK = RGBColor(34, 34, 34)        # Charcoal Text (#222222)
+COLOR_MUTED = RGBColor(85, 85, 85)       # Muted Slate (#555555)
 
 HEX_PRIMARY = "1B365D"
 HEX_SECONDARY = "336699"
-HEX_LIGHT_BG = "F4F6F9"
-HEX_CALLOUT_BG = "EBF3FA"
-HEX_BORDER = "B0C4DE"
+HEX_CALLOUT_BG = "F4F7FB"
+HEX_FORMULA_BG = "F0F4F8"
+HEX_LIGHT_BG = "EBF2FA"
+HEX_BORDER = "C0D0E0"
 
 def set_cell_background(cell, hex_color):
     tcPr = cell._tc.get_or_add_tcPr()
@@ -57,10 +71,16 @@ def set_cell_margins(cell, top=100, bottom=100, left=150, right=150):
     tcPr.append(tcMar)
 
 def add_callout(doc, question, answer):
+    """Adds an unbreakable callout box for defense Q&A."""
     tbl = doc.add_table(rows=1, cols=1)
     tbl.alignment = WD_TABLE_ALIGNMENT.CENTER
     tbl.autofit = False
-    tbl.columns[0].width = Inches(6.5)
+    tbl.columns[0].width = Inches(7.0)
+    
+    # Prevent splitting across pages
+    trPr = tbl.rows[0]._tr.get_or_add_trPr()
+    trPr.append(parse_xml(f'<w:cantSplit {nsdecls("w")}/>'))
+    
     cell = tbl.cell(0, 0)
     set_cell_background(cell, HEX_CALLOUT_BG)
     set_cell_margins(cell, top=120, bottom=120, left=160, right=160)
@@ -79,13 +99,15 @@ def add_callout(doc, question, answer):
     p = cell.paragraphs[0]
     p.paragraph_format.space_before = Pt(0)
     p.paragraph_format.space_after = Pt(2)
-    run_q = p.add_run(f"❓ DEFENSE QUESTION: {question}\n")
+    p.paragraph_format.line_spacing = 1.15
+    
+    run_q = p.add_run(f"❓ ANTICIPATED DEFENSE QUERY: {question}\n")
     run_q.font.name = "Arial"
     run_q.font.size = Pt(9.5)
     run_q.font.bold = True
     run_q.font.color.rgb = COLOR_PRIMARY
     
-    run_lbl = p.add_run("🎯 SAY EXACTLY THIS:\n")
+    run_lbl = p.add_run("🎯 RECOMMENDED DEFENSE (SAY EXACTLY THIS):\n")
     run_lbl.font.name = "Arial"
     run_lbl.font.size = Pt(8.5)
     run_lbl.font.bold = True
@@ -117,22 +139,22 @@ def generate_markdown():
     lines.append("> **Public Repository**: [github.com/aksharsakhi/c-xai-healthcare-predictions](https://github.com/aksharsakhi/c-xai-healthcare-predictions)\n")
     lines.append("---\n")
     
-    # Executive Cheat Sheet Section
-    lines.append("## ⚡ Executive Defense Cheat Sheet: Vital Numbers & Formulations to Know Cold\n")
-    lines.append("If you get asked any sudden numbers, consult this instant reference table:\n")
-    lines.append("| Metric / Parameter | Value to State | Clinical / Mathematical Meaning |")
+    # Executive Summary Section
+    lines.append("## ⚡ Executive Technical Summary: Vital Benchmark Metrics & Formulations\n")
+    lines.append("Consolidated empirical findings, rigorous statistical significance tests, and mathematical specifications for the C-XAI healthcare auditing framework:\n")
+    lines.append("| Metric / Parameter | Exact Empirical Value | Clinical & Mathematical Interpretation |")
     lines.append("|:---|:---|:---|")
-    lines.append("| **Total Records Audited** | **51,369 encounters** | MIMIC-IV (40k), eICU (10k), BCWD (569), Cardio EHR (800) |")
+    lines.append("| **Total Records Audited** | **51,369 encounters** | MIMIC-IV (40k, ICU Sepsis), eICU (10k, multi-center), BCWD (569), Cardio EHR (800) |")
     lines.append("| **Clinical Utility Gain** | **+19.6% relative (+13.9% abs)** | Extra Trees ($0.849$) vs. Tabular Deep ResNet ($0.711$) on MIMIC-IV |")
-    lines.append("| **Statistical Significance** | **p < 0.001, W = 0.0, d = 2.96** | Wilcoxon signed-rank $W=0.0$ (50/50 wins), Paired $t=14.82$, Cohen's $d=2.96$ |")
-    lines.append("| **Explanation Instability** | **9.6× worse in Deep Nets** | ResNet $\\widehat{\\mathcal{S}}_{\\text{Lip}} = 0.4912$ vs. Extra Trees $0.0512$ under $h=0.05$ |")
-    lines.append("| **Explainer Discordance** | **7.4× higher in Deep Nets** | ResNet $\\mathcal{D}_{\\text{XAI}} = 0.435$ vs. Extra Trees $0.059$ (94.1% consensus) |")
+    lines.append("| **Statistical Significance** | **p < 0.001, W = 0.0, d = 2.96** | Wilcoxon signed-rank $W=0.0$ (50/50 wins across seeds), Paired $t=14.82$, Cohen's $d=2.96$ |")
+    lines.append("| **Explanation Instability** | **9.6× higher in Deep Nets** | ResNet $\\widehat{\\mathcal{S}}_{\\text{Lip}} = 0.4912$ vs. Extra Trees $0.0512$ under $h=0.05$ |")
+    lines.append("| **Explainer Discordance** | **7.4× higher in Deep Nets** | ResNet $\\mathcal{D}_{\\text{XAI}} = 0.435$ vs. Extra Trees $0.059$ (94.1% consensus across explainers) |")
     lines.append("| **Accuracy Decoupling** | **R² = 0.04 across cohorts** | Linear regression between AUROC and Utility proves zero predictive correlation |")
-    lines.append("| **Sensor Noise Radius** | **h = 0.05 (Gaussian)** | 5% standard deviation drift, matching routine ICU telemetry fluctuation |")
+    lines.append("| **Sensor Noise Radius** | **h = 0.05 (Gaussian)** | 5% standard deviation drift, matching routine ICU bedside telemetry fluctuation |")
     lines.append("| **Reliance Error Weights** | **α = 0.50, β = 0.30** | Asymmetric decision penalties: Over-reliance (fatal omission) > Under-reliance |")
-    lines.append("| **Inference Latency** | **4.2 ms vs. 48.5 ms** | Extra Trees is 11.5× faster than Tabular Deep ResNet in real-time scoring |\n")
+    lines.append("| **Inference Latency** | **4.2 ms vs. 48.5 ms** | Extra Trees is 11.5× faster than Tabular Deep ResNet in real-time bedside triage |\n")
     
-    lines.append("### 📐 The 4 Core C-XAI Mathematical Formulas\n")
+    lines.append("### 📐 The 4 Core C-XAI Mathematical Formulations\n")
     lines.append("1. **Local Lipschitz Explanation Stability ($\\widehat{\\mathcal{S}}_{\\text{Lip}}$)**:")
     lines.append("   $$\\widehat{\\mathcal{S}}_{\\text{Lip}}(x; f, \\mathcal{E}, h) = \\frac{1}{M} \\sum_{m=1}^M \\frac{\\|\\mathcal{E}_f(x + \\delta_m) - \\mathcal{E}_f(x)\\|_2}{\\|\\delta_m\\|_2 + \\epsilon_0}, \\quad \\delta_m \\sim \\mathcal{N}(0, h^2 I), \\quad M = 100, \\; h = 0.05$$")
     lines.append("2. **Cross-Explainer Discordance ($\\mathcal{D}_{\\text{XAI}}$)**:")
@@ -149,29 +171,29 @@ def generate_markdown():
         s_num = s["slide_num"]
         s_title = s["title"]
         lines.append(f"## Slide {s_num}: {s_title}\n")
-        lines.append(f"**Core Message for Presenter**: *{s['core_message']}*\n")
+        lines.append(f"**🎯 Core Scientific Thesis & Slide Takeaway**: *{s['core_message']}*\n")
         
-        lines.append("### 🔑 Key Concepts, Acronyms & Terminology Explained")
+        lines.append("### 🔑 Key Concepts, Acronyms & Clinical Terminology")
         for term, definition in s["key_terms"]:
             lines.append(f"- **{term}**: {definition}")
         lines.append("")
         
-        lines.append("### ⚙️ Deep Technical & Mathematical Mechanics")
+        lines.append("### ⚙️ Mathematical Formulations & Algorithmic Mechanics")
         for head, details in s["technical_mechanics"]:
             lines.append(f"- **{head}**:")
             for sub in details.split("\n"):
                 lines.append(f"  {sub}")
         lines.append("")
         
-        lines.append("### 🏥 Clinical Context & Real-World Decision Impact")
+        lines.append("### 🏥 Clinical Context, Workflow Integration & Patient Safety")
         for head, details in s["clinical_relevance"]:
             lines.append(f"- **{head}**: {details}")
         lines.append("")
         
-        lines.append("### 🎯 Tough Examiner/Reviewer Questions & Instant Defense Answers")
+        lines.append("### 🛡️ Anticipated Technical Questions & Author Defense Statements")
         for q, a in s["tough_questions"]:
-            lines.append(f"> **❓ Question: {q}**  ")
-            lines.append(f"> **🎯 Say Exactly This**: {a}\n")
+            lines.append(f"> **❓ Anticipated Defense Query: {q}**  ")
+            lines.append(f"> **🎯 Recommended Defense (Say Exactly This)**: {a}\n")
         
         lines.append("---\n")
     
@@ -187,13 +209,33 @@ def generate_docx():
     print(f"Building styled Word document at {DOCX_PATH}...")
     doc = docx.Document()
     
-    # Set standard 1-inch margins
+    # Set professional 0.75-inch margins
     sections = doc.sections
     for section in sections:
-        section.top_margin = Inches(1.0)
-        section.bottom_margin = Inches(1.0)
-        section.left_margin = Inches(1.0)
-        section.right_margin = Inches(1.0)
+        section.top_margin = Inches(0.75)
+        section.bottom_margin = Inches(0.75)
+        section.left_margin = Inches(0.75)
+        section.right_margin = Inches(0.75)
+        
+        # Running Header
+        header = section.header
+        p_head = header.paragraphs[0]
+        p_head.text = "ICMLDE 2026 (Paper ID: 857) · C-XAI Presentation Technical Reference & Defense Dossier"
+        p_head.alignment = WD_PARAGRAPH_ALIGNMENT.RIGHT
+        if p_head.runs:
+            p_head.runs[0].font.name = "Arial"
+            p_head.runs[0].font.size = Pt(8.0)
+            p_head.runs[0].font.color.rgb = RGBColor(120, 120, 120)
+            
+        # Running Footer
+        footer = section.footer
+        p_foot = footer.paragraphs[0]
+        p_foot.text = "Amrita School of Computing, Amrita Vishwa Vidyapeetham · C-XAI Clinical Auditing Framework"
+        p_foot.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+        if p_foot.runs:
+            p_foot.runs[0].font.name = "Arial"
+            p_foot.runs[0].font.size = Pt(8.0)
+            p_foot.runs[0].font.color.rgb = RGBColor(120, 120, 120)
         
     # Document Title Block
     p_title = doc.add_paragraph()
@@ -201,54 +243,56 @@ def generate_docx():
     p_title.paragraph_format.space_after = Pt(2)
     r_t = p_title.add_run("C-XAI: Master Slide-by-Slide Technical Reference & Conference Defense Guide")
     r_t.font.name = "Arial"
-    r_t.font.size = Pt(18)
+    r_t.font.size = Pt(17)
     r_t.font.bold = True
     r_t.font.color.rgb = COLOR_PRIMARY
     
     p_sub = doc.add_paragraph()
     p_sub.paragraph_format.space_before = Pt(0)
-    p_sub.paragraph_format.space_after = Pt(8)
+    p_sub.paragraph_format.space_after = Pt(6)
     r_s = p_sub.add_run("5th Elsevier International Conference on Machine Learning and Data Engineering (ICMLDE 2026)\nProcedia Computer Science · Paper ID: 857 · Technical Session Presentation")
     r_s.font.name = "Arial"
-    r_s.font.size = Pt(11)
+    r_s.font.size = Pt(10.5)
     r_s.font.italic = True
     r_s.font.color.rgb = COLOR_SECONDARY
     
     # Metadata Block
     p_meta = doc.add_paragraph()
     p_meta.paragraph_format.space_before = Pt(0)
-    p_meta.paragraph_format.space_after = Pt(12)
+    p_meta.paragraph_format.space_after = Pt(10)
     p_meta.paragraph_format.line_spacing = 1.15
     r_m = p_meta.add_run(
-        "Presenter: Sheela Akshar Sakhi (aksharsakhi@gmail.com)\n"
-        "Authors: Sheela Akshar Sakhi, Ibbraheem Shaik, Settibattini Suhitha, Dr. Ramya G. R.* (Supervisor: gr_ramya@cb.amrita.edu)\n"
-        "Department of Computer Science & Engineering, Amrita School of Computing, Amrita Vishwa Vidyapeetham, India\n"
+        "Presenter: Sheela Akshar Sakhi¹ (aksharsakhi@gmail.com)\n"
+        "Authors: Sheela Akshar Sakhi¹, Ibbraheem Shaik¹, Settibattini Suhitha¹, Dr. Ramya G. R.²* (Supervisor: gr_ramya@cb.amrita.edu)\n"
+        "Department of Computer Science & Engineering, Amrita School of Computing, Amrita Vishwa Vidyapeetham, Coimbatore, India\n"
         "Public Code Repository: https://github.com/aksharsakhi/c-xai-healthcare-predictions"
     )
     r_m.font.name = "Arial"
-    r_m.font.size = Pt(9)
+    r_m.font.size = Pt(8.5)
     r_m.font.color.rgb = COLOR_MUTED
     
-    # Executive Cheat Sheet Section
-    h_exec = doc.add_heading("⚡ Executive Defense Cheat Sheet: Vital Numbers to Know Cold", level=1)
-    h_exec.paragraph_format.space_before = Pt(14)
-    h_exec.paragraph_format.space_after = Pt(6)
+    # Executive Summary Section
+    h_exec = doc.add_heading("⚡ Executive Technical Summary: Vital Benchmark Metrics & Formulations", level=1)
+    h_exec.paragraph_format.space_before = Pt(10)
+    h_exec.paragraph_format.space_after = Pt(4)
+    h_exec.paragraph_format.keep_with_next = True
     for r in h_exec.runs:
         r.font.name = "Arial"
-        r.font.size = Pt(13)
+        r.font.size = Pt(12.5)
         r.font.bold = True
         r.font.color.rgb = COLOR_PRIMARY
         
     p_desc = doc.add_paragraph()
     p_desc.paragraph_format.space_after = Pt(4)
-    r_d = p_desc.add_run("Keep these exact empirical numbers and formulas in mind for instant, authoritative responses to judges:")
+    r_d = p_desc.add_run("Consolidated empirical findings, rigorous statistical significance tests, and mathematical specifications for instant reference:")
     r_d.font.name = "Arial"
-    r_d.font.size = Pt(9.5)
+    r_d.font.size = Pt(9.0)
     r_d.font.italic = True
+    r_d.font.color.rgb = COLOR_MUTED
     
     # Summary Stats Table
     table_stats = [
-        ("Metric / Dimension", "Exact Value", "Scientific / Clinical Interpretation"),
+        ("Metric / Dimension", "Exact Empirical Value", "Clinical & Mathematical Interpretation"),
         ("Total Clinical Records", "51,369 encounters", "MIMIC-IV (40k, ICU Sepsis), eICU (10k, multi-center), BCWD (569), Cardio EHR (800)"),
         ("Clinical Decision Utility", "+19.6% relative (+13.9% abs)", "Extra Trees (0.849) vs. Tabular Deep ResNet (0.711) on MIMIC-IV"),
         ("Statistical Significance", "p < 0.001, W = 0.0, d = 2.96", "Wilcoxon W=0.0 (50/50 wins across seeds), Paired t=14.82, Cohen's d=2.96 (huge effect)"),
@@ -261,15 +305,17 @@ def generate_docx():
     tbl = doc.add_table(rows=len(table_stats), cols=3)
     tbl.alignment = WD_TABLE_ALIGNMENT.CENTER
     tbl.autofit = False
-    tbl.columns[0].width = Inches(1.8)
-    tbl.columns[1].width = Inches(2.0)
-    tbl.columns[2].width = Inches(2.7)
+    tbl.columns[0].width = Inches(1.9)
+    tbl.columns[1].width = Inches(2.1)
+    tbl.columns[2].width = Inches(3.0)
     
     for r_idx, row in enumerate(table_stats):
+        trPr = tbl.rows[r_idx]._tr.get_or_add_trPr()
+        trPr.append(parse_xml(f'<w:cantSplit {nsdecls("w")}/>'))
         is_header = (r_idx == 0)
         for c_idx, val in enumerate(row):
             cell = tbl.cell(r_idx, c_idx)
-            set_cell_margins(cell, top=80, bottom=80, left=100, right=100)
+            set_cell_margins(cell, top=70, bottom=70, left=90, right=90)
             if is_header:
                 set_cell_background(cell, HEX_PRIMARY)
             else:
@@ -289,6 +335,43 @@ def generate_docx():
             else:
                 run.font.color.rgb = COLOR_DARK
                 
+    # 4 Core Mathematical Formulas in DOCX
+    h_math = doc.add_heading("📐 The 4 Core C-XAI Mathematical Formulations", level=2)
+    h_math.paragraph_format.space_before = Pt(8)
+    h_math.paragraph_format.space_after = Pt(3)
+    h_math.paragraph_format.keep_with_next = True
+    for r in h_math.runs:
+        r.font.name = "Arial"
+        r.font.size = Pt(10.5)
+        r.font.bold = True
+        r.font.color.rgb = COLOR_SECONDARY
+        
+    formulas = [
+        ("1. Local Lipschitz Explanation Stability (SbLip):",
+         "SbLip(x; f, E, h) = (1/M) * Sum_{m=1}^M [ ||E_f(x + delta_m) - E_f(x)||_2 / (||delta_m||_2 + eps_0) ],  where delta_m ~ N(0, h^2 * I), M = 100 draws, h = 0.05"),
+        ("2. Cross-Explainer Discordance (DXAI):",
+         "DXAI(x; f) = 1 - [ 2 / (K * (K - 1)) ] * Sum_{j < k} r_s(E_j(x), E_k(x)) in [0, 2],  where K = 6 explainers, r_s is Spearman rank correlation"),
+        ("3. Dimension-Normalized Clinical Prior Alignment (W_Clin^norm):",
+         "W_Clin^norm(x) = W_1(E_norm(x), P_clin) / (d - 1) = (1 / (d - 1)) * Sum_{j=1}^{d-1} |F_E(j) - F_clin(j)| in [0, 1]"),
+        ("4. Calibrated In-Silico Clinical Utility (U_Clin):",
+         "U_Clin = w_s * (1 - SbLip) + w_d * (1 - DXAI) + w_p * (1 - W_Clin^norm) + w_c * (1 - Loss_rel),  where w_s=0.30, w_d=0.25, w_p=0.25, w_c=0.20")
+    ]
+    
+    for f_title, f_body in formulas:
+        p_f = doc.add_paragraph()
+        p_f.paragraph_format.space_before = Pt(2)
+        p_f.paragraph_format.space_after = Pt(2)
+        p_f.paragraph_format.left_indent = Inches(0.2)
+        r_ft = p_f.add_run(f_title + " ")
+        r_ft.font.name = "Arial"
+        r_ft.font.size = Pt(8.5)
+        r_ft.font.bold = True
+        r_ft.font.color.rgb = COLOR_PRIMARY
+        r_fb = p_f.add_run(f_body)
+        r_fb.font.name = "Courier New"
+        r_fb.font.size = Pt(8.0)
+        r_fb.font.color.rgb = COLOR_DARK
+        
     p_space = doc.add_paragraph()
     p_space.paragraph_format.space_after = Pt(6)
 
@@ -299,38 +382,38 @@ def generate_docx():
         
         # Slide Heading
         h1 = doc.add_heading(f"Slide {s_num}: {s_title}", level=1)
-        h1.paragraph_format.space_before = Pt(16)
-        h1.paragraph_format.space_after = Pt(4)
+        h1.paragraph_format.space_before = Pt(14)
+        h1.paragraph_format.space_after = Pt(3)
         h1.paragraph_format.keep_with_next = True
         for r in h1.runs:
             r.font.name = "Arial"
-            r.font.size = Pt(13.5)
+            r.font.size = Pt(13.0)
             r.font.bold = True
             r.font.color.rgb = COLOR_PRIMARY
             
         # Core Message
         p_core = doc.add_paragraph()
-        p_core.paragraph_format.space_after = Pt(6)
+        p_core.paragraph_format.space_after = Pt(5)
         p_core.paragraph_format.line_spacing = 1.15
-        r_cm_lbl = p_core.add_run("📢 PUNCHY CORE MESSAGE: ")
+        r_cm_lbl = p_core.add_run("🎯 Core Scientific Takeaway & Slide Thesis: ")
         r_cm_lbl.font.name = "Arial"
-        r_cm_lbl.font.size = Pt(9.5)
+        r_cm_lbl.font.size = Pt(9.0)
         r_cm_lbl.font.bold = True
         r_cm_lbl.font.color.rgb = COLOR_SECONDARY
         r_cm_txt = p_core.add_run(s["core_message"])
         r_cm_txt.font.name = "Arial"
-        r_cm_txt.font.size = Pt(9.5)
+        r_cm_txt.font.size = Pt(9.0)
         r_cm_txt.font.italic = True
         r_cm_txt.font.color.rgb = COLOR_DARK
         
         # Key Terms
-        h2_terms = doc.add_heading("Key Concepts, Acronyms & Terminology", level=2)
-        h2_terms.paragraph_format.space_before = Pt(8)
-        h2_terms.paragraph_format.space_after = Pt(3)
+        h2_terms = doc.add_heading("Key Concepts, Acronyms & Clinical Terminology", level=2)
+        h2_terms.paragraph_format.space_before = Pt(6)
+        h2_terms.paragraph_format.space_after = Pt(2)
         h2_terms.paragraph_format.keep_with_next = True
         for r in h2_terms.runs:
             r.font.name = "Arial"
-            r.font.size = Pt(10.5)
+            r.font.size = Pt(10.0)
             r.font.bold = True
             r.font.color.rgb = COLOR_SECONDARY
             
@@ -340,22 +423,22 @@ def generate_docx():
             p_b.paragraph_format.line_spacing = 1.15
             r_t = p_b.add_run(f"{term}: ")
             r_t.font.name = "Arial"
-            r_t.font.size = Pt(9.0)
+            r_t.font.size = Pt(8.5)
             r_t.font.bold = True
             r_t.font.color.rgb = COLOR_DARK
             r_d = p_b.add_run(definition)
             r_d.font.name = "Arial"
-            r_d.font.size = Pt(9.0)
+            r_d.font.size = Pt(8.5)
             r_d.font.color.rgb = COLOR_DARK
             
         # Technical Mechanics
-        h2_tech = doc.add_heading("Deep Technical & Mathematical Mechanics", level=2)
-        h2_tech.paragraph_format.space_before = Pt(8)
-        h2_tech.paragraph_format.space_after = Pt(3)
+        h2_tech = doc.add_heading("Mathematical Formulations & Algorithmic Mechanics", level=2)
+        h2_tech.paragraph_format.space_before = Pt(6)
+        h2_tech.paragraph_format.space_after = Pt(2)
         h2_tech.paragraph_format.keep_with_next = True
         for r in h2_tech.runs:
             r.font.name = "Arial"
-            r.font.size = Pt(10.5)
+            r.font.size = Pt(10.0)
             r.font.bold = True
             r.font.color.rgb = COLOR_SECONDARY
             
@@ -365,22 +448,22 @@ def generate_docx():
             p_t.paragraph_format.line_spacing = 1.15
             r_h = p_t.add_run(f"{head}: ")
             r_h.font.name = "Arial"
-            r_h.font.size = Pt(9.0)
+            r_h.font.size = Pt(8.5)
             r_h.font.bold = True
             r_h.font.color.rgb = COLOR_PRIMARY
             r_det = p_t.add_run(details)
             r_det.font.name = "Arial"
-            r_det.font.size = Pt(9.0)
+            r_det.font.size = Pt(8.5)
             r_det.font.color.rgb = COLOR_DARK
             
         # Clinical Relevance
-        h2_clin = doc.add_heading("Clinical Context & Real-World Impact", level=2)
-        h2_clin.paragraph_format.space_before = Pt(8)
-        h2_clin.paragraph_format.space_after = Pt(3)
+        h2_clin = doc.add_heading("Clinical Context, Workflow Integration & Patient Safety", level=2)
+        h2_clin.paragraph_format.space_before = Pt(6)
+        h2_clin.paragraph_format.space_after = Pt(2)
         h2_clin.paragraph_format.keep_with_next = True
         for r in h2_clin.runs:
             r.font.name = "Arial"
-            r.font.size = Pt(10.5)
+            r.font.size = Pt(10.0)
             r.font.bold = True
             r.font.color.rgb = COLOR_SECONDARY
             
@@ -390,22 +473,22 @@ def generate_docx():
             p_c.paragraph_format.line_spacing = 1.15
             r_ch = p_c.add_run(f"{head}: ")
             r_ch.font.name = "Arial"
-            r_ch.font.size = Pt(9.0)
+            r_ch.font.size = Pt(8.5)
             r_ch.font.bold = True
-            r_ch.font.color.rgb = COLOR_GREEN
+            r_ch.font.color.rgb = COLOR_ACCENT
             r_cd = p_c.add_run(details)
             r_cd.font.name = "Arial"
-            r_cd.font.size = Pt(9.0)
+            r_cd.font.size = Pt(8.5)
             r_cd.font.color.rgb = COLOR_DARK
             
         # Tough Questions
-        h2_q = doc.add_heading("Tough Reviewer / Audience Questions & Defense Answers", level=2)
-        h2_q.paragraph_format.space_before = Pt(8)
-        h2_q.paragraph_format.space_after = Pt(4)
+        h2_q = doc.add_heading("Anticipated Technical Questions & Author Defense Statements", level=2)
+        h2_q.paragraph_format.space_before = Pt(6)
+        h2_q.paragraph_format.space_after = Pt(3)
         h2_q.paragraph_format.keep_with_next = True
         for r in h2_q.runs:
             r.font.name = "Arial"
-            r.font.size = Pt(10.5)
+            r.font.size = Pt(10.0)
             r.font.bold = True
             r.font.color.rgb = COLOR_SECONDARY
             
@@ -438,3 +521,4 @@ def convert_to_pdf():
 if __name__ == "__main__":
     generate_markdown()
     generate_docx()
+    convert_to_pdf()
