@@ -1,12 +1,12 @@
 """
 dashboard/app.py
 ================
-FastAPI backend serving the C-XAI Presentation Dashboard (ICMLDE 2026 · Paper ID 857).
-All endpoints execute real scikit-learn, SciPy, SHAP, and PyTorch computations.
+FastAPI backend serving the C-XAI Interactive Research Visualization Website
+(ICMLDE 2026 · Paper ID 857).
 """
 
 import os
-from typing import Any, Dict, Optional
+from typing import Dict, Optional
 
 import uvicorn
 from fastapi import FastAPI, HTTPException, Query
@@ -27,7 +27,7 @@ from dashboard.paper_reference import (
 STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
 
 app = FastAPI(
-    title="C-XAI Clinical Auditing Dashboard (ICMLDE 2026 · Paper 857)",
+    title="C-XAI Interactive Project & Clinical Auditing Platform (ICMLDE 2026 · Paper 857)",
     version="1.0.0",
 )
 
@@ -43,10 +43,19 @@ class PatientExplainRequest(BaseModel):
     seed: int = 42
 
 
+class Surface2DRequest(BaseModel):
+    cohort: str
+    feat_x: Optional[str] = None
+    feat_y: Optional[str] = None
+    raw_features: Optional[Dict[str, float]] = None
+    noise_h: float = Field(default=0.05, ge=0.0, le=0.30)
+    seed: int = 42
+
+
 class AttackRequest(BaseModel):
     cohort: str
-    attack_mode: str = "fgsm"  # clean | gaussian | mcar_20 | fgsm | scal_pgd
-    eps_adv: float = Field(default=0.05, ge=0.005, le=0.25)
+    attack_mode: str = "scal_pgd"
+    eps_adv: float = Field(default=0.10, ge=0.005, le=0.30)
 
 
 class UtilitySimRequest(BaseModel):
@@ -79,6 +88,7 @@ def list_cohorts():
             "short": spec["short"],
             "clinical_domain": spec["clinical_domain"],
             "guideline": spec["guideline"],
+            "priors": spec["priors"],
             "n_total": c["n_total"],
             "n_test": c["n_test"],
             "n_features": len(c["features"]),
@@ -113,6 +123,21 @@ def explain_patient(req: PatientExplainRequest):
         sample_idx=req.sample_idx,
         noise_h=req.noise_h,
         mc_samples=req.mc_samples,
+        seed=req.seed,
+    )
+
+
+@app.post("/api/surface/2d")
+def get_surface_2d(req: Surface2DRequest):
+    eng = get_engine()
+    if req.cohort not in eng.cohorts:
+        raise HTTPException(status_code=404, detail=f"Cohort '{req.cohort}' not found")
+    return eng.compute_decision_surface_2d(
+        cname=req.cohort,
+        feat_x=req.feat_x,
+        feat_y=req.feat_y,
+        raw_features=req.raw_features,
+        noise_h=req.noise_h,
         seed=req.seed,
     )
 

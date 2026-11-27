@@ -1,12 +1,9 @@
 """
 dashboard/engine.py
 ===================
-Real-time ML & XAI auditing engine for the C-XAI ICMLDE 2026 presentation dashboard.
-All predictions, attributions (TreeSHAP, LIME Ridge Surrogate, Integrated Gradients,
-SmoothGrad, Zeroth-Order Gaussian Smoother via Stein's Lemma, Local Ablation PFI),
-Lipschitz stability sweeps, cross-explainer discordance matrices, Wasserstein clinical
-prior alignments, calibration curves, adversarial attacks (FGSM, ScaL-PGD, MCAR),
-and statistical tests are computed using real scikit-learn, SciPy, SHAP, and PyTorch models.
+Real-time ML & XAI auditing engine for the C-XAI ICMLDE 2026 platform.
+Executes genuine scikit-learn, Platt calibration, SciPy, SHAP, and PyTorch computations.
+Includes 2D decision-surface evaluation for geometric Representation Paradox visualization.
 """
 
 import json
@@ -23,10 +20,11 @@ import shap
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from scipy.stats import spearmanr, ttest_rel, wasserstein_distance, wilcoxon
+from scipy.special import expit, logit
+from scipy.stats import spearmanr, ttest_rel, wilcoxon
 from sklearn.datasets import load_breast_cancer
 from sklearn.ensemble import ExtraTreesClassifier, RandomForestClassifier
-from sklearn.linear_model import Ridge
+from sklearn.linear_model import LogisticRegression, Ridge
 from sklearn.metrics import accuracy_score, roc_auc_score
 from sklearn.model_selection import train_test_split
 from sklearn.neural_network import MLPClassifier
@@ -132,20 +130,20 @@ class TabularDeepResNet(nn.Module):
     def __init__(self, input_dim: int, hidden_dim: int = 64):
         super().__init__()
         self.input_layer = nn.Linear(input_dim, hidden_dim)
-        self.relu = nn.ReLU()
+        self.relu = nn.SiLU()
         self.res_block1 = nn.Sequential(
             nn.Linear(hidden_dim, hidden_dim),
             nn.BatchNorm1d(hidden_dim),
-            nn.ReLU(),
-            nn.Dropout(0.2),
+            nn.SiLU(),
+            nn.Dropout(0.15),
             nn.Linear(hidden_dim, hidden_dim),
             nn.BatchNorm1d(hidden_dim),
         )
         self.res_block2 = nn.Sequential(
             nn.Linear(hidden_dim, hidden_dim),
             nn.BatchNorm1d(hidden_dim),
-            nn.ReLU(),
-            nn.Dropout(0.2),
+            nn.SiLU(),
+            nn.Dropout(0.15),
             nn.Linear(hidden_dim, hidden_dim),
             nn.BatchNorm1d(hidden_dim),
         )
@@ -158,7 +156,7 @@ class TabularDeepResNet(nn.Module):
         return self.out(h)
 
 
-def train_pytorch_resnet(X_train: np.ndarray, y_train: np.ndarray, epochs: int = 25, batch_size: int = 128) -> TabularDeepResNet:
+def train_pytorch_resnet(X_train: np.ndarray, y_train: np.ndarray, epochs: int = 35, batch_size: int = 128) -> TabularDeepResNet:
     torch.manual_seed(42)
     np.random.seed(42)
     model = TabularDeepResNet(X_train.shape[1], hidden_dim=64)
@@ -184,14 +182,31 @@ def train_pytorch_resnet(X_train: np.ndarray, y_train: np.ndarray, epochs: int =
     return model
 
 
+class PlattCalibratedTree:
+    """Wraps a fitted tree ensemble with authentic out-of-fold Platt sigmoid calibration
+    so predicted probabilities are well-calibrated while TreeSHAP inspects base_tree natively."""
+
+    def __init__(self, base_tree: Any, calibrator: Optional[LogisticRegression]):
+        self.base_tree = base_tree
+        self.calibrator = calibrator
+
+    def predict_proba(self, X: np.ndarray) -> np.ndarray:
+        raw_p = self.base_tree.predict_proba(X)
+        if self.calibrator is None:
+            return raw_p
+        p1 = np.clip(raw_p[:, 1], 1e-6, 1.0 - 1e-6)
+        log_odds = logit(p1).reshape(-1, 1)
+        return self.calibrator.predict_proba(log_odds)
+
+
 # ===========================================================================
-# DATASET BUILDER (PRESERVING RAW CLINICAL UNITS + SCALER)
+# DATASET BUILDER (WITH REALISTIC CLINICAL NON-LINEAR INTERACTIONS)
 # ===========================================================================
 def build_cohorts_with_scalers() -> Dict[str, Dict[str, Any]]:
     cohorts: Dict[str, Dict[str, Any]] = {}
     np.random.seed(42)
 
-    # 1. MIMIC-IV (N=40,000)
+    # 1. MIMIC-IV (N=40,000) — Sepsis-3 non-linear organ dysfunction interactions
     n_m = 40000
     age_m = np.random.normal(65, 14, n_m)
     sofa_m = np.random.poisson(6, n_m)
@@ -201,14 +216,16 @@ def build_cohorts_with_scalers() -> Dict[str, Dict[str, Any]]:
     resp_m = np.random.normal(22, 6, n_m)
     wbc_m = np.random.normal(14, 5, n_m)
     logit_m = (
-        0.05 * (age_m - 65)
-        + 0.25 * (sofa_m - 6)
-        + 0.35 * (lactate_m - 2.5)
-        + 0.03 * (hr_m - 95)
-        - 0.04 * (bp_m - 115)
-        + np.random.normal(0, 1, n_m)
+        0.04 * (age_m - 65)
+        + 0.35 * (sofa_m - 6)
+        + 0.55 * (lactate_m - 2.5)
+        + 1.15 * ((sofa_m >= 7) & (lactate_m >= 2.2)).astype(float)
+        + 0.85 * ((age_m >= 68) & (bp_m <= 100)).astype(float)
+        - 0.035 * (bp_m - 115)
+        + 0.02 * (hr_m - 95)
+        + np.random.normal(0, 0.9, n_m)
     )
-    y_m = (logit_m > 0.0).astype(int)
+    y_m = (logit_m > 0.2).astype(int)
     df_m = pd.DataFrame({
         "SOFA Score": sofa_m,
         "Serum Lactate": lactate_m,
@@ -219,20 +236,21 @@ def build_cohorts_with_scalers() -> Dict[str, Dict[str, Any]]:
         "WBC Count": wbc_m,
     })
 
-    # 2. eICU (N=10,000)
+    # 2. eICU (N=10,000) — Multi-center sepsis hypotension + fever thresholds
     n_e = 10000
     temp_e = np.random.normal(38.2, 1.2, n_e)
     wbc_e = np.random.normal(16, 6, n_e)
     hr_e = np.random.normal(105, 20, n_e)
     map_e = np.random.normal(62, 12, n_e)
     logit_e = (
-        0.3 * (temp_e - 38.2)
+        0.35 * (temp_e - 38.2)
         + 0.25 * (wbc_e - 16)
-        + 0.2 * (hr_e - 105)
+        + 0.15 * (hr_e - 105)
         - 0.35 * (map_e - 62)
-        + np.random.normal(0, 1, n_e)
+        + 1.10 * ((map_e < 65) & (wbc_e >= 14)).astype(float)
+        + np.random.normal(0, 0.9, n_e)
     )
-    y_e = (logit_e > 0.0).astype(int)
+    y_e = (logit_e > 0.2).astype(int)
     df_e = pd.DataFrame({
         "Mean Arterial Pressure": map_e,
         "Temperature": temp_e,
@@ -253,14 +271,15 @@ def build_cohorts_with_scalers() -> Dict[str, Dict[str, Any]]:
     bmi_c = np.random.normal(28, 5, n_c)
     gluc_c = np.random.normal(100, 25, n_c)
     logit_c = (
-        0.04 * (age_c - 60)
-        + 0.03 * (bp_c - 130)
+        0.05 * (age_c - 60)
+        + 0.04 * (bp_c - 130)
         + 0.02 * (chol_c - 220)
-        + 0.05 * (bmi_c - 28)
+        + 0.06 * (bmi_c - 28)
         + 0.03 * (gluc_c - 100)
-        + np.random.normal(0, 1, n_c)
+        + 0.90 * ((bp_c >= 140) & (age_c >= 60)).astype(float)
+        + np.random.normal(0, 0.9, n_c)
     )
-    y_c = (logit_c > 0.0).astype(int)
+    y_c = (logit_c > 0.2).astype(int)
     df_c = pd.DataFrame({
         "Age": age_c,
         "Systolic BP": bp_c,
@@ -284,13 +303,11 @@ def build_cohorts_with_scalers() -> Dict[str, Dict[str, Any]]:
         X_tr = pd.DataFrame(scaler.fit_transform(X_raw_tr), columns=df_raw.columns)
         X_te = pd.DataFrame(scaler.transform(X_raw_te), columns=df_raw.columns)
 
-        # Healthy-survivor median baseline in scaled space (negative class median)
         neg_mask = (y_tr == 0)
         baseline_scaled = (
             X_tr[neg_mask].median().values if np.any(neg_mask) else X_tr.median().values
         )
 
-        # Feature slider bounds from 1st to 99th percentile in raw units
         feature_meta = []
         units_map = COHORT_SPECS[cname]["units"]
         for col in df_raw.columns:
@@ -328,7 +345,7 @@ def build_cohorts_with_scalers() -> Dict[str, Dict[str, Any]]:
 
 
 # ===========================================================================
-# REAL POST-HOC EXPLAINERS (TREE, MLP, PYTORCH RESNET)
+# REAL POST-HOC EXPLAINERS
 # ===========================================================================
 def predict_proba_positive(model: Any, model_name: str, X_arr: np.ndarray) -> np.ndarray:
     X_arr = np.atleast_2d(X_arr)
@@ -342,7 +359,6 @@ def predict_proba_positive(model: Any, model_name: str, X_arr: np.ndarray) -> np
 
 def explain_shap_or_kernel(model: Any, model_name: str, tree_explainer: Optional[shap.TreeExplainer],
                            x_row: np.ndarray, baseline: np.ndarray, seed: int = 42) -> np.ndarray:
-    """TreeSHAP for tree ensembles; weighted coalition Shapley surrogate for neural nets."""
     x_row = np.atleast_2d(x_row)
     if tree_explainer is not None:
         sv = tree_explainer.shap_values(x_row)
@@ -352,12 +368,10 @@ def explain_shap_or_kernel(model: Any, model_name: str, tree_explainer: Optional
             return np.asarray(sv[0, :, 1], dtype=float)
         return np.asarray(sv[0], dtype=float)
 
-    # Authentic KernelSHAP coalition regression around baseline x'
     d = x_row.shape[1]
     rng = np.random.default_rng(seed)
     n_coal = min(140, max(60, 12 * d))
     masks = rng.integers(0, 2, size=(n_coal, d)).astype(float)
-    # Force informative edge coalitions
     masks[0, :] = 1.0
     masks[1, :] = 0.0
     Z = masks * x_row + (1.0 - masks) * baseline.reshape(1, -1)
@@ -371,8 +385,6 @@ def explain_shap_or_kernel(model: Any, model_name: str, tree_explainer: Optional
 
 def explain_lime_surrogate(model: Any, model_name: str, x_row: np.ndarray,
                            baseline: np.ndarray, n_samples: int = 220, seed: int = 42) -> np.ndarray:
-    """Local linear Ridge surrogate weighted by exponential proximity kernel (Ribeiro et al., 2016),
-    scaled by (x - x') so all attributions share ΔP(y=1) counterfactual units."""
     x_row = np.atleast_2d(x_row)
     d = x_row.shape[1]
     rng = np.random.default_rng(seed)
@@ -387,11 +399,6 @@ def explain_lime_surrogate(model: Any, model_name: str, x_row: np.ndarray,
 
 def explain_zeroth_order_stein_grad(model: Any, model_name: str, x_row: np.ndarray,
                                     sigma: float = 0.05, n_draws: int = 60, seed: int = 42) -> np.ndarray:
-    """
-    Zeroth-Order Gaussian Smoother via Stein's Lemma:
-    grad f_sigma(x) = (1 / (M * sigma^2)) * sum_m (f(x + u_m) - f(x)) * u_m
-    Enables gradient/SmoothGrad explanations on discontinuous tree ensembles.
-    """
     x_row = np.atleast_2d(x_row)
     rng = np.random.default_rng(seed)
     U = rng.normal(0.0, sigma, size=(n_draws, x_row.shape[1]))
@@ -440,7 +447,6 @@ def explain_integrated_gradients(model: Any, model_name: str, x_row: np.ndarray,
         return ig.detach().cpu().numpy()[0]
 
     if model_name == "MLP":
-        # Central finite-difference path integral
         eps = 1e-3
         d = x_row.shape[1]
         total_grad = np.zeros(d)
@@ -453,7 +459,6 @@ def explain_integrated_gradients(model: Any, model_name: str, x_row: np.ndarray,
             total_grad += g
         return diff * (total_grad / steps)
 
-    # Tree ensembles: Zeroth-Order Gaussian Smoother path integral (Stein's lemma)
     total_grad = np.zeros_like(diff)
     path_steps = 8
     for s_idx, alpha in enumerate(np.linspace(0.1, 1.0, path_steps)):
@@ -465,7 +470,6 @@ def explain_integrated_gradients(model: Any, model_name: str, x_row: np.ndarray,
 
 
 def explain_local_pfi(model: Any, model_name: str, x_row: np.ndarray, baseline: np.ndarray) -> np.ndarray:
-    """Local baseline replacement / ablation shift |P(y=1|x) - P(y=1|x_{-j}, x'_j)|."""
     x_row = np.atleast_2d(x_row)
     d = x_row.shape[1]
     p0 = predict_proba_positive(model, model_name, x_row)[0]
@@ -481,9 +485,9 @@ def compute_all_explainers(model: Any, model_name: str, tree_exp: Optional[shap.
     primary_name = "TreeSHAP" if tree_exp is not None else "KernelSHAP"
     return {
         primary_name: explain_shap_or_kernel(model, model_name, tree_exp, x_row, baseline, seed=seed),
-        "LIME Surrogate": explain_lime_surrogate(model, model_name, x_row, baseline, seed=seed),
-        "Integrated Gradients": explain_integrated_gradients(model, model_name, x_row, baseline, seed=seed),
-        "SmoothGrad" if model_name in ("Tabular Deep ResNet", "MLP") else "Zeroth-Order SmoothGrad":
+        "LIME": explain_lime_surrogate(model, model_name, x_row, baseline, seed=seed),
+        "Int. Grads": explain_integrated_gradients(model, model_name, x_row, baseline, seed=seed),
+        ("SmoothGrad" if model_name in ("Tabular Deep ResNet", "MLP") else "ZO-SmoothGrad"):
             explain_smoothgrad(model, model_name, x_row, baseline, seed=seed),
         "Local PFI": explain_local_pfi(model, model_name, x_row, baseline),
     }
@@ -534,11 +538,19 @@ class CXAIEngine:
         for cname in self.cohorts:
             self._ensure_cohort_ready(cname, force_rebuild=False)
 
+    def _fit_platt_tree(self, base_clf: Any, X_fit: np.ndarray, y_fit: np.ndarray,
+                        X_cal: np.ndarray, y_cal: np.ndarray) -> PlattCalibratedTree:
+        base_clf.fit(X_fit, y_fit)
+        raw_p = np.clip(base_clf.predict_proba(X_cal)[:, 1], 1e-6, 1.0 - 1e-6)
+        log_odds = logit(raw_p).reshape(-1, 1)
+        cal = LogisticRegression(C=1.0).fit(log_odds, y_cal)
+        return PlattCalibratedTree(base_clf, cal)
+
     def _ensure_cohort_ready(self, cname: str, force_rebuild: bool = False):
         slug = self._cohort_slug(cname)
-        model_pkl = os.path.join(CACHE_DIR, f"{slug}_sklearn.pkl")
-        resnet_pt = os.path.join(CACHE_DIR, f"{slug}_resnet.pt")
-        audit_json = os.path.join(CACHE_DIR, f"{slug}_audit.json")
+        model_pkl = os.path.join(CACHE_DIR, f"{slug}_sklearn_v2.pkl")
+        resnet_pt = os.path.join(CACHE_DIR, f"{slug}_resnet_v2.pt")
+        audit_json = os.path.join(CACHE_DIR, f"{slug}_audit_v2.json")
 
         c = self.cohorts[cname]
         d_in = len(c["features"])
@@ -554,23 +566,29 @@ class CXAIEngine:
 
             self.models[cname] = {**sk_models, "Tabular Deep ResNet": resnet}
             self.tree_explainers[cname] = {
-                "Extra Trees": shap.TreeExplainer(sk_models["Extra Trees"]),
-                "Random Forest": shap.TreeExplainer(sk_models["Random Forest"]),
+                "Extra Trees": shap.TreeExplainer(sk_models["Extra Trees"].base_tree),
+                "Random Forest": shap.TreeExplainer(sk_models["Random Forest"].base_tree),
             }
             self.audit_cache[cname] = audit
             return
 
-        # Real training & real full cohort evaluation
-        print(f"[CXAI Engine] Training real models and running quantitative audit for '{cname}'...")
+        print(f"[CXAI Engine] Training calibrated models and auditing '{cname}'...")
         X_tr_arr = c["X_train"].values
         y_tr = c["y_train"]
 
-        et = ExtraTreesClassifier(n_estimators=100, max_depth=16, min_samples_leaf=3, random_state=42, n_jobs=-1)
-        et.fit(X_tr_arr, y_tr)
+        # Hold out 15% of training split solely for genuine Platt sigmoid calibration
+        X_fit, X_cal, y_fit, y_cal = train_test_split(
+            X_tr_arr, y_tr, test_size=0.15, random_state=42, stratify=y_tr
+        )
 
-        rf = RandomForestClassifier(n_estimators=100, max_depth=16, min_samples_leaf=3, random_state=42, n_jobs=-1)
-        rf.fit(X_tr_arr, y_tr)
-
+        et = self._fit_platt_tree(
+            ExtraTreesClassifier(n_estimators=100, max_depth=16, min_samples_leaf=5, random_state=42, n_jobs=-1),
+            X_fit, y_fit, X_cal, y_cal
+        )
+        rf = self._fit_platt_tree(
+            RandomForestClassifier(n_estimators=100, max_depth=16, min_samples_leaf=5, random_state=42, n_jobs=-1),
+            X_fit, y_fit, X_cal, y_cal
+        )
         mlp = MLPClassifier(hidden_layer_sizes=(64, 32), max_iter=200, random_state=42)
         mlp.fit(X_tr_arr, y_tr)
 
@@ -579,8 +597,8 @@ class CXAIEngine:
         sk_models = {"Extra Trees": et, "Random Forest": rf, "MLP": mlp}
         self.models[cname] = {**sk_models, "Tabular Deep ResNet": resnet}
         self.tree_explainers[cname] = {
-            "Extra Trees": shap.TreeExplainer(et),
-            "Random Forest": shap.TreeExplainer(rf),
+            "Extra Trees": shap.TreeExplainer(et.base_tree),
+            "Random Forest": shap.TreeExplainer(rf.base_tree),
         }
 
         audit = self._run_full_cohort_audit(cname)
@@ -609,14 +627,12 @@ class CXAIEngine:
         reliability_curves = {}
         noise_scaling = {str(h): {"h": h} for h in h_scales}
         per_sample_utilities: Dict[str, List[float]] = {}
-        per_sample_s_lip: Dict[str, List[float]] = {}
         discordance_matrices: Dict[str, Any] = {}
 
         for mname in MODEL_ORDER:
             mod = self.models[cname][mname]
             t_exp = self.tree_explainers[cname].get(mname)
 
-            # Inference latency & accuracy/calibration on full test set
             t0 = time.perf_counter()
             probs = predict_proba_positive(mod, mname, X_te_arr)
             total_ms = (time.perf_counter() - t0) * 1000.0
@@ -628,7 +644,6 @@ class CXAIEngine:
             ece = float(compute_expected_calibration_error(y_te, probs, n_bins=10))
             brier = float(compute_brier_score(y_te, probs))
 
-            # Calibration bin curve
             bins = np.linspace(0.0, 1.0, 11)
             bin_conf, bin_acc, bin_cnt = [], [], []
             for b_i in range(10):
@@ -640,15 +655,14 @@ class CXAIEngine:
                     bin_cnt.append(int(np.sum(mask)))
             reliability_curves[mname] = {"conf": bin_conf, "acc": bin_acc, "count": bin_cnt}
 
-            # Real Local Lipschitz Stability & Discordance across n_eval test encounters
             sample_lips_h05 = []
             sample_dxais = []
             sample_imp_accum = np.zeros(len(feats), dtype=float)
             agg_explainers = None
+            agg_names = []
 
             for i in range(n_eval):
                 x0 = X_sub[i:i + 1]
-                # Primary attribution for Lipschitz test (TreeSHAP for trees, IG for ResNet/MLP)
                 if t_exp is not None:
                     e0 = explain_shap_or_kernel(mod, mname, t_exp, x0, baseline, seed=42 + i)
                 else:
@@ -656,7 +670,6 @@ class CXAIEngine:
 
                 sample_imp_accum += np.abs(e0)
 
-                # Multi-draw Monte Carlo Lipschitz at h=0.05 (M=8 draws per sample => 160 draws total)
                 draw_ratios = []
                 for m_draw in range(8):
                     noise = rng.normal(0.0, 0.05, size=x0.shape)
@@ -668,7 +681,6 @@ class CXAIEngine:
                     draw_ratios.append(float(np.linalg.norm(e0 - ep)) / dx)
                 sample_lips_h05.append(float(np.mean(draw_ratios)))
 
-                # Discordance across explainers on first 8 samples
                 if i < 8:
                     exps = compute_all_explainers(mod, mname, t_exp, x0, baseline, seed=42 + i)
                     dm = compute_discordance_matrix(exps)
@@ -692,8 +704,6 @@ class CXAIEngine:
             w_norm, a_clin = compute_clinical_wasserstein_distance(mean_imp, feats, priors)
             util = compute_calibrated_clinical_utility(acc, mean_s_lip, a_clin, ece)
 
-            # Per-sample utilities for paired statistical tests
-            per_sample_s_lip[mname] = sample_lips_h05
             per_sample_utilities[mname] = [
                 compute_calibrated_clinical_utility(acc, sl, a_clin, ece)["Net_Clinical_Utility"]
                 for sl in sample_lips_h05
@@ -716,23 +726,20 @@ class CXAIEngine:
                 "latency_ms": latency_ms,
             })
 
-            # Multi-scale h sensitivity (10 samples per scale)
             for h in h_scales:
                 h_ratios = []
                 for i in range(min(10, n_eval)):
                     x0 = X_sub[i:i + 1]
+                    noise = rng.normal(0.0, h, size=x0.shape)
                     if t_exp is not None:
                         e0 = explain_shap_or_kernel(mod, mname, t_exp, x0, baseline, seed=42 + i)
-                        noise = rng.normal(0.0, h, size=x0.shape)
                         ep = explain_shap_or_kernel(mod, mname, t_exp, x0 + noise, baseline, seed=42 + i)
                     else:
                         e0 = explain_integrated_gradients(mod, mname, x0, baseline, steps=15, seed=42 + i)
-                        noise = rng.normal(0.0, h, size=x0.shape)
                         ep = explain_integrated_gradients(mod, mname, x0 + noise, baseline, steps=15, seed=42 + i)
                     h_ratios.append(float(np.linalg.norm(e0 - ep)) / (float(np.linalg.norm(noise)) + 1e-8))
                 noise_scaling[str(h)][mname] = round(float(np.mean(h_ratios)), 4)
 
-        # Statistical significance (Extra Trees vs Tabular Deep ResNet)
         u_et = np.array(per_sample_utilities["Extra Trees"])
         u_dp = np.array(per_sample_utilities["Tabular Deep ResNet"])
         t_stat, p_t = ttest_rel(u_et, u_dp)
@@ -744,13 +751,11 @@ class CXAIEngine:
         s_pool = float(np.sqrt((np.var(u_et, ddof=1) + np.var(u_dp, ddof=1)) / 2.0)) + 1e-8
         cohens_d = float(np.mean(diff) / s_pool)
 
-        # Accuracy-Utility OLS R^2 across the 4 models
         aucs = np.array([r["auroc"] for r in leaderboard])
         utils = np.array([r["u_clin"] for r in leaderboard])
         r_corr = np.corrcoef(aucs, utils)[0, 1] if np.std(aucs) > 1e-8 and np.std(utils) > 1e-8 else 0.0
         r2_decoupling = float(0.0 if np.isnan(r_corr) else r_corr ** 2)
 
-        # Demographic Fairness Subgroup Audit (Median split on Age or 1st feature)
         fairness_col = "Age" if "Age" in feats else feats[0]
         f_idx = feats.index(fairness_col)
         col_vals = X_te_arr[:, f_idx]
@@ -839,6 +844,77 @@ class CXAIEngine:
             "raw_features": {k: round(float(v), 3) for k, v in raw_row.items()},
         }
 
+    def compute_decision_surface_2d(
+        self,
+        cname: str,
+        feat_x: Optional[str] = None,
+        feat_y: Optional[str] = None,
+        raw_features: Optional[Dict[str, float]] = None,
+        noise_h: float = 0.05,
+        grid_n: int = 28,
+        seed: int = 42,
+    ) -> Dict[str, Any]:
+        """Evaluates real 2D decision probability contours of Extra Trees vs. Tabular Deep ResNet
+        plus a live cloud of M=35 Gaussian noise draws around the patient in clinical units."""
+        c = self.cohorts[cname]
+        feats = c["features"]
+        fx = feat_x if feat_x in feats else feats[0]
+        fy = feat_y if feat_y in feats and feat_y != fx else feats[min(1, len(feats) - 1)]
+        ix, iy = feats.index(fx), feats.index(fy)
+
+        base_raw = np.array([
+            float((raw_features or {}).get(f, c["X_test_raw"][f].median()))
+            for f in feats
+        ])
+        meta_map = {m["name"]: m for m in c["feature_meta"]}
+        x_vals = np.linspace(meta_map[fx]["min"], meta_map[fx]["max"], grid_n)
+        y_vals = np.linspace(meta_map[fy]["min"], meta_map[fy]["max"], grid_n)
+        xx, yy = np.meshgrid(x_vals, y_vals)
+
+        grid_raw = np.repeat(base_raw[None, :], grid_n * grid_n, axis=0)
+        grid_raw[:, ix] = xx.ravel()
+        grid_raw[:, iy] = yy.ravel()
+        grid_scaled = c["scaler"].transform(grid_raw)
+
+        # Real Gaussian perturbation cloud in scaled space transformed back to clinical raw units
+        x_patient_scaled = c["scaler"].transform(base_raw[None, :])
+        rng = np.random.default_rng(seed)
+        noise_cloud_scaled = x_patient_scaled + rng.normal(0.0, max(1e-4, noise_h), size=(35, len(feats)))
+        noise_cloud_raw = c["scaler"].inverse_transform(noise_cloud_scaled)
+
+        et_mod = self.models[cname]["Extra Trees"]
+        rn_mod = self.models[cname]["Tabular Deep ResNet"]
+
+        z_et = predict_proba_positive(et_mod, "Extra Trees", grid_scaled).reshape(grid_n, grid_n)
+        z_rn = predict_proba_positive(rn_mod, "Tabular Deep ResNet", grid_scaled).reshape(grid_n, grid_n)
+
+        p_cloud_et = predict_proba_positive(et_mod, "Extra Trees", noise_cloud_scaled)
+        p_cloud_rn = predict_proba_positive(rn_mod, "Tabular Deep ResNet", noise_cloud_scaled)
+
+        return {
+            "cohort": cname,
+            "feat_x": fx,
+            "feat_y": fy,
+            "unit_x": meta_map[fx]["unit"],
+            "unit_y": meta_map[fy]["unit"],
+            "x_grid": [round(float(v), 3) for v in x_vals],
+            "y_grid": [round(float(v), 3) for v in y_vals],
+            "z_extra_trees": np.round(z_et, 4).tolist(),
+            "z_deep_resnet": np.round(z_rn, 4).tolist(),
+            "patient": {
+                "x": round(float(base_raw[ix]), 3),
+                "y": round(float(base_raw[iy]), 3),
+                "p_et": round(float(predict_proba_positive(et_mod, "Extra Trees", x_patient_scaled)[0]), 4),
+                "p_resnet": round(float(predict_proba_positive(rn_mod, "Tabular Deep ResNet", x_patient_scaled)[0]), 4),
+            },
+            "noise_cloud": {
+                "x": [round(float(v), 3) for v in noise_cloud_raw[:, ix]],
+                "y": [round(float(v), 3) for v in noise_cloud_raw[:, iy]],
+                "p_et_std": round(float(np.std(p_cloud_et)), 4),
+                "p_resnet_std": round(float(np.std(p_cloud_rn)), 4),
+            },
+        }
+
     def explain_patient(
         self,
         cname: str,
@@ -865,7 +941,6 @@ class CXAIEngine:
             raw_display = {f: round(float(c["X_test_raw"].iloc[idx][f]), 3) for f in feats}
 
         rng = np.random.default_rng(seed)
-        # Shared noise realization so comparison between Extra Trees and Deep ResNet uses exact same sensor jitter
         delta_example = rng.normal(0.0, max(1e-6, noise_h), size=x_scaled.shape) if noise_h > 0 else np.zeros_like(x_scaled)
         x_noisy = x_scaled + delta_example
 
@@ -880,8 +955,7 @@ class CXAIEngine:
             exps_clean = compute_all_explainers(mod, mname, t_exp, x_scaled, baseline, seed=seed)
             exps_noisy = compute_all_explainers(mod, mname, t_exp, x_noisy, baseline, seed=seed)
 
-            # Live Monte Carlo Lipschitz Stability at chosen (noise_h, mc_samples)
-            primary_key = "TreeSHAP" if t_exp is not None else "Integrated Gradients"
+            primary_key = "TreeSHAP" if t_exp is not None else "Int. Grads"
             e0 = exps_clean[primary_key]
             mc_ratios = []
             if noise_h > 0:
@@ -900,7 +974,6 @@ class CXAIEngine:
             disc = compute_discordance_matrix(exps_clean)
             w_norm, a_clin = compute_clinical_wasserstein_distance(np.abs(e0), feats, priors)
 
-            # Normalized importance share across priors for visual comparison
             imp_abs = {feats[j]: float(abs(e0[j])) for j in range(len(feats))}
             prior_tot = sum(priors.values()) + 1e-8
             prior_feats = list(priors.keys())
@@ -938,14 +1011,12 @@ class CXAIEngine:
             "models": results_by_model,
         }
 
-    def run_live_attack(self, cname: str, attack_mode: str = "fgsm", eps_adv: float = 0.05) -> Dict[str, Any]:
+    def run_live_attack(self, cname: str, attack_mode: str = "fgsm", eps_adv: float = 0.08) -> Dict[str, Any]:
         """
-        Executes real perturbation/adversarial stress-tests on Extra Trees, Random Forest, MLP, and Tabular Deep ResNet:
-        - clean: unperturbed
-        - gaussian: isotropic N(0, eps_adv^2 I)
-        - mcar_20: 20% Missing Completely At Random masked to training median
-        - fgsm: real gradient FGSM attack maximizing attribution gradient distortion while keeping class label
-        - scal_pgd: 5-step Projected Gradient Descent targeting top attribution flip within L_inf <= eps_adv
+        Executes genuine perturbation & gradient-inversion attacks on all 4 architectures:
+        - fgsm / scal_pgd: computes real PyTorch input gradients and solves for delta within
+          ||delta||_inf <= eps_adv maximizing rank-inversion against clean gradient direction
+          while anchoring class probabilities.
         """
         c = self.cohorts[cname]
         X_sub = c["X_test"].iloc[:25].values.copy()
@@ -954,7 +1025,6 @@ class CXAIEngine:
         baseline = c["baseline_scaled"]
         rng = np.random.default_rng(42)
 
-        # Craft real adversarial perturbations using Tabular Deep ResNet gradients
         resnet = self.models[cname]["Tabular Deep ResNet"]
         X_adv_torch = torch.tensor(X_sub, dtype=torch.float32)
 
@@ -967,25 +1037,36 @@ class CXAIEngine:
             mask = rng.random(size=X_sub.shape) < 0.20
             X_corrupt[mask] = np.broadcast_to(baseline, X_sub.shape)[mask]
         elif attack_mode in ("fgsm", "scal_pgd"):
-            steps = 1 if attack_mode == "fgsm" else 5
+            steps = 1 if attack_mode == "fgsm" else 8
             step_size = eps_adv if steps == 1 else (eps_adv / 2.5)
-            x_cur = X_adv_torch.clone().detach()
-            with torch.no_grad():
-                orig_logits = resnet(X_adv_torch)
-                orig_probs = torch.softmax(orig_logits, dim=-1)[:, 1]
+            bt = torch.tensor(baseline, dtype=torch.float32).unsqueeze(0)
 
+            def ig_tensor(x_in: torch.Tensor) -> torch.Tensor:
+                tdiff = x_in - bt
+                tot = torch.zeros_like(x_in)
+                for alpha in (0.2, 0.4, 0.6, 0.8, 1.0):
+                    xs = (bt + alpha * tdiff).requires_grad_(True)
+                    p = torch.softmax(resnet(xs), dim=-1)[:, 1].sum()
+                    tot = tot + torch.autograd.grad(p, xs, create_graph=True)[0]
+                return tdiff * (tot / 5.0)
+
+            with torch.no_grad():
+                orig_probs = torch.softmax(resnet(X_adv_torch), dim=-1)[:, 1]
+            ig_orig = ig_tensor(X_adv_torch.clone().detach()).detach()
+            ig_orig_norm = ig_orig / (ig_orig.norm(dim=1, keepdim=True) + 1e-8)
+
+            x_cur = X_adv_torch.clone().detach()
             for _ in range(steps):
                 x_var = x_cur.clone().detach().requires_grad_(True)
-                out = resnet(x_var)
-                probs_1 = torch.softmax(out, dim=-1)[:, 1]
-                # Input gradient of predicted probability
-                grads = torch.autograd.grad(probs_1.sum(), x_var, create_graph=True)[0]
-                # Objective: distort attribution gradient norm & invert ranking while staying close to original prob
-                prob_anchor = ((probs_1 - orig_probs) ** 2).sum()
-                att_shift = -(grads.abs().sum()) + 5.0 * prob_anchor
-                g_step = torch.autograd.grad(att_shift, x_var)[0]
+                probs_1 = torch.softmax(resnet(x_var), dim=-1)[:, 1]
+                ig_cur = ig_tensor(x_var)
+                ig_cur_norm = ig_cur / (ig_cur.norm(dim=1, keepdim=True) + 1e-8)
+                # Minimize alignment with clean IG path integral while preserving predicted risk
+                cos_align = torch.sum(ig_cur_norm * ig_orig_norm, dim=1).mean()
+                prob_anchor = ((probs_1 - orig_probs) ** 2).mean()
+                loss = cos_align + 4.0 * prob_anchor
+                g_step = torch.autograd.grad(loss, x_var)[0]
                 x_cur = x_cur - step_size * g_step.sign()
-                # Project onto L_inf eps_adv ball around original clean X_adv_torch
                 delta = torch.clamp(x_cur - X_adv_torch, -eps_adv, eps_adv)
                 x_cur = (X_adv_torch + delta).detach()
             X_corrupt = x_cur.cpu().numpy()
@@ -1027,10 +1108,8 @@ class CXAIEngine:
                     dxais.append(float(max(0.0, min(2.0, 1.0 - rho))))
 
                 if i == 0:
-                    top_idx_0 = np.argsort(np.abs(e0))[::-1][:3]
-                    top_idx_c = np.argsort(np.abs(ec))[::-1][:3]
-                    clean_top3 = [feats[idx] for idx in top_idx_0]
-                    corr_top3 = [feats[idx] for idx in top_idx_c]
+                    clean_top3 = [feats[idx] for idx in np.argsort(np.abs(e0))[::-1][:3]]
+                    corr_top3 = [feats[idx] for idx in np.argsort(np.abs(ec))[::-1][:3]]
 
             rows.append({
                 "model": mname,
@@ -1070,7 +1149,6 @@ class CXAIEngine:
             ur_rate = acc * (1.0 - t_clin) * 0.3
             u_clin = max(0.0, acc * t_clin - (alpha * or_rate + beta * ur_rate))
 
-            # Ablation contributions on this model
             t_no_s = 0.5 * (a_comp + c_comp)
             t_no_a = 0.5 * (s_comp + c_comp)
             t_no_c = 0.5 * (s_comp + a_comp)
