@@ -67,6 +67,17 @@ class UtilitySimRequest(BaseModel):
     w_c: float = Field(default=0.334, ge=0.0, le=1.0)
 
 
+def resolve_cohort_name(c: str) -> str:
+    eng = get_engine()
+    if c in eng.cohorts:
+        return c
+    c_lower = c.strip().lower()
+    for name, spec in COHORT_SPECS.items():
+        if c_lower in [name.lower(), spec["short"].lower()]:
+            return name
+    raise HTTPException(status_code=404, detail=f"Cohort '{c}' not found. Available: {list(eng.cohorts.keys())}")
+
+
 @app.on_event("startup")
 def startup_warm_engine():
     get_engine()
@@ -98,27 +109,24 @@ def list_cohorts():
 
 @app.get("/api/overview")
 def get_overview(cohort: str = Query(...), rebuild: bool = False):
+    cname = resolve_cohort_name(cohort)
     eng = get_engine()
-    if cohort not in eng.cohorts:
-        raise HTTPException(status_code=404, detail=f"Cohort '{cohort}' not found")
-    return eng.get_cohort_overview(cohort, rebuild=rebuild)
+    return eng.get_cohort_overview(cname, rebuild=rebuild)
 
 
 @app.get("/api/patient/sample")
 def get_patient_sample(cohort: str = Query(...), idx: int = 0):
+    cname = resolve_cohort_name(cohort)
     eng = get_engine()
-    if cohort not in eng.cohorts:
-        raise HTTPException(status_code=404, detail=f"Cohort '{cohort}' not found")
-    return eng.get_patient_record(cohort, idx)
+    return eng.get_patient_record(cname, idx)
 
 
 @app.post("/api/patient/explain")
 def explain_patient(req: PatientExplainRequest):
+    cname = resolve_cohort_name(req.cohort)
     eng = get_engine()
-    if req.cohort not in eng.cohorts:
-        raise HTTPException(status_code=404, detail=f"Cohort '{req.cohort}' not found")
     return eng.explain_patient(
-        cname=req.cohort,
+        cname=cname,
         raw_features=req.raw_features,
         sample_idx=req.sample_idx,
         noise_h=req.noise_h,
@@ -129,11 +137,10 @@ def explain_patient(req: PatientExplainRequest):
 
 @app.post("/api/surface/2d")
 def get_surface_2d(req: Surface2DRequest):
+    cname = resolve_cohort_name(req.cohort)
     eng = get_engine()
-    if req.cohort not in eng.cohorts:
-        raise HTTPException(status_code=404, detail=f"Cohort '{req.cohort}' not found")
     return eng.compute_decision_surface_2d(
-        cname=req.cohort,
+        cname=cname,
         feat_x=req.feat_x,
         feat_y=req.feat_y,
         raw_features=req.raw_features,
@@ -144,19 +151,17 @@ def get_surface_2d(req: Surface2DRequest):
 
 @app.post("/api/attack/run")
 def run_attack(req: AttackRequest):
+    cname = resolve_cohort_name(req.cohort)
     eng = get_engine()
-    if req.cohort not in eng.cohorts:
-        raise HTTPException(status_code=404, detail=f"Cohort '{req.cohort}' not found")
-    return eng.run_live_attack(cname=req.cohort, attack_mode=req.attack_mode, eps_adv=req.eps_adv)
+    return eng.run_live_attack(cname=cname, attack_mode=req.attack_mode, eps_adv=req.eps_adv)
 
 
 @app.post("/api/utility/simulate")
 def simulate_utility(req: UtilitySimRequest):
+    cname = resolve_cohort_name(req.cohort)
     eng = get_engine()
-    if req.cohort not in eng.cohorts:
-        raise HTTPException(status_code=404, detail=f"Cohort '{req.cohort}' not found")
     return eng.simulate_utility_sensitivity(
-        cname=req.cohort,
+        cname=cname,
         alpha=req.alpha,
         beta=req.beta,
         w_s=req.w_s,
